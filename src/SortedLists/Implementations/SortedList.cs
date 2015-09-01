@@ -166,8 +166,11 @@
             // TODO: Use binary search
             var index = IndexOf(item);
 
-            while (index + 1 < Count && this[index + 1].CompareTo(item) == 0)
-                ++index;
+            if (index >= 0)
+            {
+                while (index + 1 < Count && this[index + 1].CompareTo(item) == 0)
+                    ++index;
+            }
 
             return index;
         }

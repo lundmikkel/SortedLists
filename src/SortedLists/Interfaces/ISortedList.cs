@@ -121,7 +121,7 @@
                 // If the index is correct, the output can never be null
                 Contract.Ensures(Contract.Result<T>() != null);
                 // Result is the same as skipping the first i elements
-                Contract.Ensures(ReferenceEquals(Contract.Result<T>(), this.Skip(i).First()));
+                Contract.Ensures(Contract.Result<T>().CompareTo(this.Skip(i).First()) == 0);
 
                 throw new NotImplementedException();
             }
@@ -134,7 +134,7 @@
                 Contract.Requires(Count > 0);
 
                 // Result is the same 
-                Contract.Ensures(ReferenceEquals(Contract.Result<T>(), this[0]));
+                Contract.Ensures(Contract.Result<T>().CompareTo(this[0]) == 0);
 
                 throw new NotImplementedException();
             }
@@ -147,7 +147,7 @@
                 Contract.Requires(Count > 0);
 
                 // Result is the same as this[Count - 1]
-                Contract.Ensures(ReferenceEquals(Contract.Result<T>(), this[Count - 1]));
+                Contract.Ensures(Contract.Result<T>().CompareTo(this[Count - 1]) == 0);
 
                 throw new NotImplementedException();
             }
@@ -234,10 +234,11 @@
         public int IndexOf(T item)
         {
             Contract.Requires(item != null);
-
+            
             Contract.Ensures(0 <= Contract.Result<int>()
                 ? this[Contract.Result<int>()].CompareTo(item) == 0 && (Contract.Result<int>() - 1 < 0 || this[Contract.Result<int>() - 1].CompareTo(item) < 0)
-                : (!(0 <= ~Contract.Result<int>() - 1) || this[~Contract.Result<int>() - 1].CompareTo(item) < 0) && (~Contract.Result<int>() < Count || item.CompareTo(this[~Contract.Result<int>()]) < 0));
+                : (!(0 <= ~Contract.Result<int>() - 1 && ~Contract.Result<int>() - 1 < Count) || this[~Contract.Result<int>() - 1].CompareTo(item) < 0)
+                && (!(0 <= ~Contract.Result<int>() && ~Contract.Result<int>() < Count) || item.CompareTo(this[~Contract.Result<int>()]) < 0));
 
             throw new NotImplementedException();
         }
