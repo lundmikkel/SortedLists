@@ -73,6 +73,23 @@
         }
 
         [Pure]
+        public static bool IsStrictlySorted<T>(this IEnumerable<T> collection, IComparer<T> comparer)
+        {
+            Contract.Requires(collection != null);
+            Contract.Requires(comparer != null);
+
+            return collection.ForAllConsecutiveElements((x, y) => comparer.Compare(x, y) < 0);
+        }
+
+        [Pure]
+        public static bool IsStrictlySorted<T>(this IEnumerable<T> collection) where T : IComparable<T>
+        {
+            Contract.Requires(collection != null);
+
+            return collection.ForAllConsecutiveElements((x, y) => x.CompareTo(y) < 0);
+        }
+
+        [Pure]
         public static bool IsSortedBackwards<T>(this IEnumerable<T> collection, IComparer<T> comparer)
         {
             Contract.Requires(collection != null);
