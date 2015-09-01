@@ -1,0 +1,50 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2013
+VisualStudioVersion = 12.0.30723.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SortedLists", "SortedLists\SortedLists.csproj", "{175BDF78-5F4E-407D-B63C-52F7DB65FFFA}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{8AED3657-3762-4B95-8434-71B300207011}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "misc", "misc", "{C654E9B5-4044-4BFA-B0BB-AA7C54A5F249}"
+	ProjectSection(SolutionItems) = preProject
+		..\.gitattributes = ..\.gitattributes
+		..\.gitignore = ..\.gitignore
+		SortedLists.sln.DotSettings = SortedLists.sln.DotSettings
+		..\License.txt = ..\License.txt
+		nuget.config = nuget.config
+		..\README.md = ..\README.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{8A0D0E03-F513-4695-B15C-C2EB037AEA38}"
+	ProjectSection(SolutionItems) = preProject
+		..\scripts - Clean all.bat = ..\scripts - Clean all.bat
+		..\scripts - Restore packages.bat = ..\scripts - Restore packages.bat
+		..\scripts - Update NuGet.bat = ..\scripts - Update NuGet.bat
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SortedLists.Tests", "SortedLists.Tests\SortedLists.Tests.csproj", "{DA2ADBC7-BAA5-482F-A588-AA4BFDD692DB}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{175BDF78-5F4E-407D-B63C-52F7DB65FFFA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{175BDF78-5F4E-407D-B63C-52F7DB65FFFA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{175BDF78-5F4E-407D-B63C-52F7DB65FFFA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{175BDF78-5F4E-407D-B63C-52F7DB65FFFA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DA2ADBC7-BAA5-482F-A588-AA4BFDD692DB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DA2ADBC7-BAA5-482F-A588-AA4BFDD692DB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DA2ADBC7-BAA5-482F-A588-AA4BFDD692DB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DA2ADBC7-BAA5-482F-A588-AA4BFDD692DB}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{175BDF78-5F4E-407D-B63C-52F7DB65FFFA} = {8AED3657-3762-4B95-8434-71B300207011}
+		{DA2ADBC7-BAA5-482F-A588-AA4BFDD692DB} = {8AED3657-3762-4B95-8434-71B300207011}
+	EndGlobalSection
+EndGlobal
