@@ -5,9 +5,9 @@
 
     abstract class AbstractSortedListTest : SortedListTestBase
     {
-        protected override ISortedList<int> CreateEmptyList()
+        protected override ISortedList<T> CreateEmptyList<T>()
         {
-            return new SortedList<int>(AllowsDuplicates());
+            return new SortedList<T>(AllowsDuplicates());
         }
     }
 
