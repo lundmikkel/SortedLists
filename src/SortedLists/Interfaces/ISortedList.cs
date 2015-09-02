@@ -44,6 +44,9 @@
         IEnumerable<T> EnumerateRange(int inclusiveFrom, int exclusiveTo);
 
         [Pure]
+        IEnumerable<T> EnumerateBackwards();
+        
+        [Pure]
         IEnumerable<T> EnumerateBackwardsFromIndex(int index);
 
         #endregion
@@ -58,6 +61,7 @@
 
         #region Extensible
 
+        // TODO: Return the index where the item was inserted, or if duplicates are not allowed, the index of the duplicate?
         bool Add(T item);
 
         bool Remove(T item);
@@ -187,6 +191,21 @@
             // Enumerable is the same as skipping the first inclusiveFrom intervals and then tale t
             Contract.Ensures(Enumerable.SequenceEqual(
                 this.Skip(inclusiveFrom).Take(exclusiveTo - inclusiveFrom),
+                Contract.Result<IEnumerable<T>>()
+            ));
+
+            throw new NotImplementedException();
+        }
+
+        public IEnumerable<T> EnumerateBackwards()
+        {
+            Contract.Ensures(Contract.Result<IEnumerable<T>>() != null);
+
+            // The enumerator is endpoint sorted
+            Contract.Ensures(Contract.Result<IEnumerable<T>>().IsSortedBackwards());
+            // Enumerable is the same as sorted backwards
+            Contract.Ensures(Enumerable.SequenceEqual(
+                this.Reverse(),
                 Contract.Result<IEnumerable<T>>()
             ));
 

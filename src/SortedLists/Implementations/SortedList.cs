@@ -4,6 +4,7 @@
     using System.Collections;
     using System.Collections.Generic;
     using System.Diagnostics.Contracts;
+    using System.Linq;
     using C5;
     using Interfaces;
 
@@ -116,6 +117,12 @@
         {
             while (inclusiveFrom < exclusiveTo)
                 yield return _list[inclusiveFrom++];
+        }
+
+        /// <inheritdoc/>
+        public IEnumerable<T> EnumerateBackwards()
+        {
+            return IsEmpty ? Enumerable.Empty<T>(): EnumerateBackwardsFromIndex(Count - 1);
         }
 
         /// <inheritdoc/>
