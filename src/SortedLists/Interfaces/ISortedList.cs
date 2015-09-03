@@ -1,4 +1,4 @@
-﻿namespace SortedLists.Interfaces
+﻿namespace SortedLists
 {
     using System;
     using System.Collections;

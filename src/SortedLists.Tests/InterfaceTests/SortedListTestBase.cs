@@ -1,9 +1,9 @@
-﻿namespace SortedLists.Tests.InterfaceTests
+﻿namespace SortedLists
 {
     using System;
+    using System.Collections.Generic;
     using System.Linq;
     using C5;
-    using Interfaces;
     using NUnit.Framework;
 
     // TODO: Manually check test and ensure tests do as expected!

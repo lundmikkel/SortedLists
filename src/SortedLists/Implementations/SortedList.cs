@@ -6,7 +6,6 @@
     using System.Diagnostics.Contracts;
     using System.Linq;
     using C5;
-    using Interfaces;
 
     public class SortedList<T> : ISortedList<T>
         where T : IComparable<T>

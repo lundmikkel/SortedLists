@@ -1,8 +1,5 @@
-﻿namespace SortedLists.Tests
+﻿namespace SortedLists
 {
-    using Interfaces;
-    using InterfaceTests;
-
     abstract class AbstractSortedListTest : SortedListTestBase
     {
         protected override ISortedList<T> CreateEmptyList<T>()
