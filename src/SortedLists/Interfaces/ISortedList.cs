@@ -53,8 +53,10 @@
 
         #region Find
 
+        [Pure]
         int IndexOf(T item);
 
+        [Pure]
         bool Contains(T item);
 
         #endregion
@@ -180,9 +182,7 @@
 
         public IEnumerable<T> EnumerateRange(int inclusiveFrom, int exclusiveTo)
         {
-            Contract.Requires(0 <= inclusiveFrom && inclusiveFrom < Count);
-            Contract.Requires(1 <= exclusiveTo && exclusiveTo <= Count);
-            Contract.Requires(inclusiveFrom < exclusiveTo);
+            Contract.Requires(0 <= inclusiveFrom && inclusiveFrom < exclusiveTo && exclusiveTo <= Count);
 
             Contract.Ensures(Contract.Result<IEnumerable<T>>() != null);
 
@@ -243,7 +243,7 @@
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return GetEnumerator();
+            throw new NotImplementedException();
         }
         
         #endregion
