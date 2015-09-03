@@ -147,6 +147,7 @@
     </Compile>
     <Compile Include="InterfaceTests\SortedListTestBase.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RedBlackBinarySearchTreeTest.cs" />
     <Compile Include="SortedListTest.cs" />
   </ItemGroup>
   <ItemGroup>
