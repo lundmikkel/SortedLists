@@ -170,6 +170,14 @@
 
         private int LastIndexOf(T item)
         {
+            Contract.Requires(item != null);
+
+            Contract.Ensures(0 <= Contract.Result<int>()
+                ? this[Contract.Result<int>()].CompareTo(item) == 0 && (Count <= Contract.Result<int>() + 1 || item.CompareTo(this[Contract.Result<int>() + 1]) < 0)
+                : (!(0 <= ~Contract.Result<int>() - 1 && ~Contract.Result<int>() - 1 < Count) || this[~Contract.Result<int>() - 1].CompareTo(item) < 0)
+                && (!(0 <= ~Contract.Result<int>() && ~Contract.Result<int>() < Count) || item.CompareTo(this[~Contract.Result<int>()]) < 0));
+
+
             // TODO: Use binary search
             var index = IndexOf(item);
 
