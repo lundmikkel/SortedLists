@@ -13,7 +13,7 @@
     {
         #region Fields
 
-        private readonly List<T> _list;
+        private readonly ArrayList<T> _list;
         private readonly bool _allowsDuplicates;
 
         #endregion
@@ -34,7 +34,7 @@
         public SortedList(bool allowsDuplicates = false)
         {
             _allowsDuplicates = allowsDuplicates;
-            _list = new List<T>();
+            _list = new ArrayList<T>();
         }
 
         #endregion
@@ -192,5 +192,11 @@
 
         #endregion
 
+        #region Methods
+        public override string ToString()
+        {
+            return _list.ToString();
+        }
+        #endregion
     }
 }
