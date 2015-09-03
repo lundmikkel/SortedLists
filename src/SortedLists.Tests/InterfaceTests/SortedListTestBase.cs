@@ -954,6 +954,20 @@
         }
 
         [Test]
+        public void Add_EmptyCollection_AddDuplicatesAtBeginning()
+        {
+            var list = CreateEmptyList<int>();
+            var count = RandomCount();
+            var offset = RandomInt();
+
+            for (var i = 0; i < count; ++i)
+                Assert.That(list.Add(i + offset));
+
+            for (var i = 0; i < count / 2; ++i)
+                Assert.AreEqual(AllowsDuplicates(), list.Add(offset));
+        }
+
+        [Test]
         public void Add_EmptyCollection_AddAllValuesRandomOrder()
         {
             var list = CreateEmptyList<byte>();

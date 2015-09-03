@@ -177,17 +177,27 @@
                 : (!(0 <= ~Contract.Result<int>() - 1 && ~Contract.Result<int>() - 1 < Count) || this[~Contract.Result<int>() - 1].CompareTo(item) < 0)
                 && (!(0 <= ~Contract.Result<int>() && ~Contract.Result<int>() < Count) || item.CompareTo(this[~Contract.Result<int>()]) < 0));
 
+            var low = 0;
+            var high = _list.Count - 1;
+            var found = false;
 
-            // TODO: Use binary search
-            var index = IndexOf(item);
-
-            if (index >= 0)
+            while (low <= high)
             {
-                while (index + 1 < Count && this[index + 1].CompareTo(item) == 0)
-                    ++index;
+                var mid = low + (high - low >> 1);
+                var compareTo = _list[mid].CompareTo(item);
+
+                if (compareTo < 0)
+                    low = mid + 1;
+                else if (compareTo > 0)
+                    high = mid - 1;
+                else {
+                    // TODO: Find a better solution
+                    found = true;
+                    low = mid + 1;
+                }
             }
 
-            return index;
+            return found ? high : ~low;
         }
 
         /// <inheritdoc/>
