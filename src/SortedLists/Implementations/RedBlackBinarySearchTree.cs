@@ -610,7 +610,7 @@
                     itemWasRemoved = true;
                     var x = min(h.Right);
                     h.Key = x.Key;
-                    h.Right = deleteMin(h.Right);
+                    h.Right = deleteMin(h.Right); 
                 }
                 else
                     h.Right = remove(h.Right, item, ref itemWasRemoved);
