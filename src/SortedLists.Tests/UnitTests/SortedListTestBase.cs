@@ -1,13 +1,9 @@
 ﻿namespace SortedLists
 {
     using System;
-    using System.Collections.Generic;
     using System.Linq;
     using C5;
     using NUnit.Framework;
-
-    // TODO: Manually check test and ensure tests do as expected!
-    // TODO: Make class that fails all tests!
 
     [TestFixture]
     public abstract class SortedListTestBase
@@ -24,7 +20,6 @@
         public void Setup()
         {
             var seed = (int) DateTime.Now.Ticks; // TODO
-            seed = -1958645440;
             Random = new Random(seed);
             Console.WriteLine("Random seed: {0}", seed);
         }
@@ -373,7 +368,7 @@
             for (var i = 0; i < count; ++i)
                 expected.Add(i + offset);
 
-            expected.Shuffle();
+            expected.Shuffle(Random);
 
             foreach (var i in expected)
                 list.Add(i);
@@ -401,7 +396,7 @@
                     expected.Add(duplicate);
             }
 
-            expected.Shuffle();
+            expected.Shuffle(Random);
 
             foreach (var i in expected)
                 list.Add(i);
@@ -487,7 +482,7 @@
             for (var i = 0; i < count; ++i)
                 expected.Add(i + offset);
 
-            expected.Shuffle();
+            expected.Shuffle(Random);
 
             foreach (var i in expected)
                 list.Add(i);
@@ -516,7 +511,7 @@
                     expected.Add(duplicate);
             }
 
-            expected.Shuffle();
+            expected.Shuffle(Random);
 
             foreach (var i in expected)
                 list.Add(i);
@@ -594,7 +589,7 @@
             for (var i = 0; i < count; ++i)
                 expected.Add(i + offset);
 
-            expected.Shuffle();
+            expected.Shuffle(Random);
 
             foreach (var i in expected)
                 list.Add(i);
@@ -622,7 +617,7 @@
                     expected.Add(duplicate);
             }
 
-            expected.Shuffle();
+            expected.Shuffle(Random);
 
             foreach (var i in expected)
                 list.Add(i);
@@ -673,7 +668,7 @@
             for (var i = 0; i < count; ++i)
                 expected.Add(i + offset);
 
-            expected.Shuffle();
+            expected.Shuffle(Random);
 
             foreach (var i in expected)
                 list.Add(i);
@@ -694,7 +689,7 @@
             for (var i = 0; i < count; ++i)
                 expected.Add(i + offset);
 
-            expected.Shuffle();
+            expected.Shuffle(Random);
 
             foreach (var i in expected)
                 list.Add(i);
@@ -746,7 +741,7 @@
             for (var i = 0; i < count; ++i)
                 expected.Add(i + offset);
 
-            expected.Shuffle();
+            expected.Shuffle(Random);
 
             foreach (var i in expected)
                 list.Add(i);
@@ -768,7 +763,7 @@
             for (var i = 0; i < count; ++i)
                 expected.Add(i + offset);
 
-            expected.Shuffle();
+            expected.Shuffle(Random);
 
             foreach (var i in expected)
                 list.Add(i);
@@ -885,7 +880,7 @@
             for (var i = 0; i < count; ++i)
                 expected.Add(i + offset);
 
-            expected.Shuffle();
+            expected.Shuffle(Random);
 
             foreach (var i in expected)
             {
@@ -977,14 +972,14 @@
             for (int i = byte.MinValue; i <= byte.MaxValue; ++i)
                 byteList.Add((byte) i);
 
-            byteList.Shuffle();
+            byteList.Shuffle(Random);
 
             foreach (var b in byteList)
                 Assert.That(list.Add(b));
 
             Assert.AreEqual(count, list.Count);
 
-            byteList.Shuffle();
+            byteList.Shuffle(Random);
 
             foreach (var b in byteList)
                 Assert.AreEqual(list.AllowsDuplicates, list.Add(b));
@@ -1060,14 +1055,14 @@
                 list.Add(b);
             }
 
-            byteList.Shuffle();
+            byteList.Shuffle(Random);
 
             foreach (var b in byteList)
                 Assert.That(list.Remove(b));
 
             Assert.That(list.IsEmpty);
 
-            byteList.Shuffle();
+            byteList.Shuffle(Random);
 
             foreach (var b in byteList)
                 Assert.False(list.Remove(b));
