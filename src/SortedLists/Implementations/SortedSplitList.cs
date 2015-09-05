@@ -26,17 +26,38 @@
         [ContractInvariantMethod]
         private void invariants()
         {
-            // Count matches the sum of counts
-            Contract.Invariant(_count == _lists.Select(list => list.Count).Sum());
             // List is sorted
             Contract.Invariant(this.IsStrictlySorted());
-            // Offsets are sorted
-            // TODO: Contract.Invariant(IsEmpty || _offsets[0] == 0);
+            // Count matches the sum of counts
+            Contract.Invariant(_count == _lists.Select(list => list.Count).Sum());
 
-            Contract.Invariant(_offsets.Count == _lists.Count);
-
+            // There is at least one list
+            Contract.Invariant(_lists.Count > 0 && _lists[0] != null);
             // No list is longer than the maximum list length
-            Contract.Invariant(Contract.ForAll(_lists, list => list.Count <= _deepness));
+            Contract.Invariant(Contract.ForAll(_lists, list => list.Capacity <= _deepness));
+            // No consecutive lists have a joined sum smaller than half the maximum list length
+            Contract.Invariant(Contract.ForAll(1, _lists.Count, i => _lists[i - 1].Count + _lists[i].Count > _deepness / 2));
+
+            // The number of lists must match the number of offset values
+            Contract.Invariant(_lists.Count == _offsets.Count);
+            // The offsets are either dirty, or correct
+            Contract.Invariant(_dirty || offsetsAreCorrectBefore(_offsets.Count));
+
+            // Deepness is a power of 2
+            Contract.Invariant(_deepness != 0 && (_deepness & _deepness - 1) == 0);
+        }
+
+        [Pure]
+        private bool offsetsAreCorrectBefore(int count)
+        {
+            if (_offsets[0] != 0)
+                return false;
+
+            for (var i = 1; i < count; i++)
+                if (_offsets[i] != _offsets[i - 1] + _lists[i - 1].Count)
+                    return false;
+
+            return true;
         }
 
         #endregion
@@ -45,6 +66,13 @@
 
         public SortedSplitList(int deepness = 1024)
         {
+            Contract.Requires(0 < deepness);
+            // Ensures _deepness is a power of two
+            Contract.Ensures(_deepness != 0 && (_deepness & _deepness - 1) == 0);
+
+            // Round to smallest power of 2, not smaller than deepness to ensure we don't waste space in lists
+            _deepness = (int) Math.Pow(2, Math.Ceiling(Math.Log(deepness, 2)));
+
             _deepness = deepness;
             _lists = new List<List<T>> { new List<T>() };
             _offsets = new List<int> { 0 };
@@ -102,6 +130,8 @@
             var listIndex = getListIndex(item);
             var list = _lists[listIndex];
             var itemIndex = getItemIndex(list, item);
+
+            updateOffsets();
             return itemIndex >= 0 ? _offsets[listIndex] + itemIndex : ~(_offsets[listIndex] + ~itemIndex);
         }
 
@@ -308,9 +338,6 @@
         {
             Contract.Requires(item != null);
             Contract.Ensures(0 <= Contract.Result<int>() && Contract.Result<int>() < _lists.Count);
-            // TODO
-            // Contract.Ensures(IsEmpty || _lists[Contract.Result<int>()][0].CompareTo(item) <= 0
-            //     && (_lists.Count <= Contract.Result<int>() + 1 || item.CompareTo(_lists[Contract.Result<int>() + 1][0]) < 0));
 
             if (_lists.Count <= 1)
                 return 0;
@@ -326,16 +353,18 @@
             return _lists.Count - 1;
         }
 
-        // TODO: Make binary
         private int getListIndexFromIndex(int index)
         {
             Contract.Requires(0 <= index && index < _count);
-            Contract.Ensures(0 <= Contract.Result<int>() && Contract.Result<int>() < _lists.Count);
-            Contract.Ensures(_offsets[Contract.Result<int>()] <= index && (_lists.Count <= Contract.Result<int>() + 1 || index < _offsets[Contract.Result<int>() + 1]));
-            // Ensures the offsets are valid from 0 to result
-            //Contract.Ensures(Contract.Result<int>() <= _dirtyFrom);
 
-            // TODO
+            // Result index has a list
+            Contract.Ensures(0 <= Contract.Result<int>() && Contract.Result<int>() < _lists.Count && _lists[Contract.Result<int>()] != null);
+            // The list at result index contains index
+            Contract.Ensures(_offsets[Contract.Result<int>()] <= index && index < _offsets[Contract.Result<int>()] + _lists[Contract.Result<int>()].Count);
+            // Ensures the offsets are valid from 0 to result
+            Contract.Ensures(offsetsAreCorrectBefore(Contract.Result<int>() + 1));
+
+            // TODO: update only what is necessary
             updateOffsets();
 
             var low = 0;
@@ -360,9 +389,6 @@
 
         private int getItemIndex(List<T> list, T item)
         {
-            // TODO
-            updateOffsets();
-
             var low = 0;
             var high = list.Count - 1;
 
@@ -379,7 +405,6 @@
                     return mid;
             }
 
-            // key not found. return insertion point
             return ~low;
         }
 
@@ -405,7 +430,7 @@
             var offset = 0;
 
             for (var i = 0; i < _offsets.Count; ++i)
-                offset = _lists[i].Count  + (_offsets[i] = offset);
+                offset = _lists[i].Count + (_offsets[i] = offset);
 
             _dirty = false;
         }
