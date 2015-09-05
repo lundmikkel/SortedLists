@@ -265,7 +265,7 @@
             }
 
             ++_count;
-            makeDirtyFrom(0);
+            makeDirtyFrom(listIndex + 1);
 
             return true;
         }
@@ -310,7 +310,7 @@
             }
 
             --_count;
-            makeDirtyFrom(0);
+            makeDirtyFrom(listIndex);
 
             return true;
         }
@@ -426,7 +426,7 @@
             if (_dirtyFrom == _offsets.Count)
                 return;
 
-            var offset = _dirtyFrom > 0 ? _offsets[_dirtyFrom] : 0;
+            var offset = _dirtyFrom > 0 ? _offsets[_dirtyFrom - 1] + _lists[_dirtyFrom - 1].Count : 0;
 
             while (_dirtyFrom < _offsets.Count)
             {
