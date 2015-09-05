@@ -285,7 +285,7 @@
             Contract.Ensures(!IsEmpty);
 
             // The collection contains the item
-            Contract.Ensures(Contains(item));
+            Contract.Ensures(Enumerable.Contains(this, item));
 
             // If the item is added the count goes up by one, otherwise stays the same
             Contract.Ensures(Count == Contract.OldValue(Count) + (Contract.Result<bool>() ? 1 : 0));
