@@ -17,7 +17,7 @@
         private readonly int _deepness;
 
         private int _count;
-        private bool _dirty;
+        private int _dirtyFrom;
 
         #endregion
 
@@ -41,7 +41,7 @@
             // The number of lists must match the number of offset values
             Contract.Invariant(_lists.Count == _offsets.Count);
             // The offsets are either dirty, or correct
-            Contract.Invariant(_dirty || offsetsAreCorrectBefore(_offsets.Count));
+            Contract.Invariant(offsetsAreCorrectBefore(_dirtyFrom));
 
             // Deepness is a power of 2
             Contract.Invariant(_deepness != 0 && (_deepness & _deepness - 1) == 0);
@@ -265,7 +265,7 @@
             }
 
             ++_count;
-            makeDirty();
+            makeDirtyFrom(0);
 
             return true;
         }
@@ -310,7 +310,7 @@
             }
 
             --_count;
-            makeDirty();
+            makeDirtyFrom(0);
 
             return true;
         }
@@ -325,6 +325,7 @@
             _offsets.Add(0);
 
             _count = 0;
+            _dirtyFrom = 0;
         }
 
         #endregion
@@ -408,31 +409,31 @@
             return ~low;
         }
 
-        private void makeDirty()
+        private void makeDirtyFrom(int index)
         {
-            //Contract.Requires(0 <= index && index < _lists.Count);
-            //Contract.Ensures(_dirtyFrom <= Contract.OldValue(_dirtyFrom));
-            //
-            //if (_dirtyFrom > index)
-            //    _dirtyFrom = index;
-
-            _dirty = true;
+            Contract.Requires(0 <= index && index <= _lists.Count);
+            Contract.Ensures(_dirtyFrom <= Contract.OldValue(_dirtyFrom));
+            
+            if (_dirtyFrom > index)
+                _dirtyFrom = index;
         }
 
         private void updateOffsets()
         {
-            //Contract.Requires(0 <= _dirtyFrom && _dirtyFrom < _offsets.Count);
-            Contract.Ensures(Contract.ForAll(1, _offsets.Count, i => _offsets[i] == _offsets[i - 1] + _lists[i - 1].Count));
+            Contract.Requires(0 <= _dirtyFrom && _dirtyFrom <= _offsets.Count);
+            Contract.Ensures(offsetsAreCorrectBefore(_dirtyFrom));
 
-            if (!_dirty)
+            if (_dirtyFrom == _offsets.Count)
                 return;
 
-            var offset = 0;
+            var offset = _dirtyFrom > 0 ? _offsets[_dirtyFrom] : 0;
 
-            for (var i = 0; i < _offsets.Count; ++i)
-                offset = _lists[i].Count + (_offsets[i] = offset);
-
-            _dirty = false;
+            while (_dirtyFrom < _offsets.Count)
+            {
+                _offsets[_dirtyFrom] = offset;
+                offset += _lists[_dirtyFrom].Count;
+                ++_dirtyFrom;
+            }
         }
 
         public override string ToString()
