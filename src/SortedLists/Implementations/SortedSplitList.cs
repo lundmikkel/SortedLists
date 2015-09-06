@@ -64,7 +64,7 @@
 
         #region Constructors
 
-        // TODO: Find a proper default value
+        // TODO: Find a proper default value using performance testing
         public SortedSplitList(int deepness = 1024)
         {
             Contract.Requires(0 < deepness);
@@ -317,8 +317,8 @@
             // Move items in current list to the beginning of the next list
             else if (listIndex < _lists.Count - 1 && list.Count + _lists[listIndex + 1].Count <= _deepness / 2)
             {
-                _lists[listIndex + 1].InsertRange(0, list);
-                _lists.RemoveAt(listIndex);
+                list.AddRange(_lists[listIndex + 1]);
+                _lists.RemoveAt(listIndex + 1);
                 _offsets.RemoveAt(_offsets.Count - 1);
             }
 
