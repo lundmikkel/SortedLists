@@ -25,7 +25,7 @@
         #region Code Contracts
 
         [ContractInvariantMethod]
-        private void invariants()
+        private void Invariants()
         {
             // List is sorted
             Contract.Invariant(this.IsStrictlySorted());
@@ -42,14 +42,14 @@
             // The number of lists must match the number of offset values
             Contract.Invariant(_lists.Count == _offsets.Count);
             // The offsets are either dirty, or correct
-            Contract.Invariant(offsetsAreCorrectBefore(_dirtyFrom));
+            Contract.Invariant(OffsetsAreCorrectBefore(_dirtyFrom));
 
             // Deepness is a power of 2
             Contract.Invariant(_deepness != 0 && (_deepness & _deepness - 1) == 0);
         }
 
         [Pure]
-        private bool offsetsAreCorrectBefore(int count)
+        private bool OffsetsAreCorrectBefore(int count)
         {
             if (_offsets[0] != 0)
                 return false;
@@ -103,7 +103,7 @@
         {
             get
             {
-                var listIndex = getListIndexFromIndex(index);
+                var listIndex = GetListIndexFromIndex(index);
                 var itemIndex = index - _offsets[listIndex];
                 return _lists[listIndex][itemIndex];
             }
@@ -129,11 +129,11 @@
         /// <inheritdoc/>
         public int IndexOf(T item)
         {
-            var listIndex = getListIndex(item);
+            var listIndex = GetListIndex(item);
             var list = _lists[listIndex];
             var itemIndex = getItemIndex(list, item);
 
-            updateOffsetsBefore(listIndex + 1);
+            UpdateOffsetsBefore(listIndex + 1);
             return itemIndex >= 0 ? _offsets[listIndex] + itemIndex : ~(_offsets[listIndex] + ~itemIndex);
         }
 
@@ -141,7 +141,7 @@
         public bool Contains(T item)
         {
             // Don't use IndexOf to avoid updating offsets unnecessarily!
-            var listIndex = getListIndex(item);
+            var listIndex = GetListIndex(item);
             var list = _lists[listIndex];
             var itemIndex = getItemIndex(list, item);
             return itemIndex >= 0;
@@ -165,7 +165,7 @@
         /// <inheritdoc/>
         public IEnumerable<T> EnumerateFromIndex(int index)
         {
-            var listIndex = getListIndexFromIndex(index);
+            var listIndex = GetListIndexFromIndex(index);
             var itemIndex = index - _offsets[listIndex];
 
             for (var i = listIndex; i < _lists.Count; ++i)
@@ -183,9 +183,9 @@
         {
             // TODO: Implement using EnumerateFromIndex and a counter?
 
-            var listFromIndex = getListIndexFromIndex(inclusiveFrom);
+            var listFromIndex = GetListIndexFromIndex(inclusiveFrom);
             var itemFromIndex = inclusiveFrom - _offsets[listFromIndex];
-            var listToIndex = getListIndexFromIndex(exclusiveTo);
+            var listToIndex = GetListIndexFromIndex(exclusiveTo);
             var itemToIndex = exclusiveTo - _offsets[listToIndex];
 
             for (var i = listFromIndex; i <= listToIndex; ++i)
@@ -212,7 +212,7 @@
         /// <inheritdoc/>
         public IEnumerable<T> EnumerateBackwardsFromIndex(int index)
         {
-            var listIndex = getListIndexFromIndex(index);
+            var listIndex = GetListIndexFromIndex(index);
             var itemIndex = index - _offsets[listIndex];
 
             for (var i = listIndex; i >= 0; --i)
@@ -231,7 +231,7 @@
         public bool Add(T item)
         {
             // Find the proper position for the item
-            var listIndex = getListIndex(item);
+            var listIndex = GetListIndex(item);
             var list = _lists[listIndex];
             var itemIndex = getItemIndex(list, item);
 
@@ -246,7 +246,7 @@
             {
                 list.Insert(itemIndex, item);
                 // The offset of the next list will be wrong
-                makeDirtyFrom(listIndex + 1);
+                MakeDirtyFrom(listIndex + 1);
             }
             else if (itemIndex == list.Count && listIndex == _lists.Count - 1)
             {
@@ -285,7 +285,7 @@
                 else
                     _lists[listIndex + 1].Insert(itemIndex - mid, item);
 
-                makeDirtyFrom(listIndex + 1);
+                MakeDirtyFrom(listIndex + 1);
             }
 
             ++_count;
@@ -297,7 +297,7 @@
         public bool Remove(T item)
         {
             // Find the proper position for the item
-            var listIndex = getListIndex(item);
+            var listIndex = GetListIndex(item);
             var list = _lists[listIndex];
             var itemIndex = getItemIndex(list, item);
 
@@ -333,7 +333,7 @@
             }
 
             --_count;
-            makeDirtyFrom(listIndex);
+            MakeDirtyFrom(listIndex);
 
             return true;
         }
@@ -357,7 +357,7 @@
 
         #region Methods
 
-        private int getListIndexFromIndex(int index)
+        private int GetListIndexFromIndex(int index)
         {
             Contract.Requires(0 <= index && index < _count);
 
@@ -366,7 +366,7 @@
             // The list at result index contains index
             Contract.Ensures(_offsets[Contract.Result<int>()] <= index && index < _offsets[Contract.Result<int>()] + _lists[Contract.Result<int>()].Count);
             // Ensures the offsets are valid from 0 to result
-            Contract.Ensures(offsetsAreCorrectBefore(Contract.Result<int>() + 1));
+            Contract.Ensures(OffsetsAreCorrectBefore(Contract.Result<int>() + 1));
 
             var low = 0;
             var high = _offsets.Count - 1;
@@ -376,7 +376,7 @@
                 var mid = low + (high - low >> 1);
 
                 // TODO: is this a worthwile optimization? Should it just update the whole index before the binary search?
-                updateOffsetsBefore(mid + 1);
+                UpdateOffsetsBefore(mid + 1);
 
                 var compareTo = _offsets[mid].CompareTo(index);
 
@@ -392,7 +392,7 @@
         }
 
         // TODO: Make binary
-        private int getListIndex(T item)
+        private int GetListIndex(T item)
         {
             Contract.Requires(item != null);
             Contract.Ensures(0 <= Contract.Result<int>() && Contract.Result<int>() < _lists.Count);
@@ -432,7 +432,7 @@
             return ~low;
         }
 
-        private void makeDirtyFrom(int index)
+        private void MakeDirtyFrom(int index)
         {
             Contract.Requires(0 <= index && index <= _lists.Count);
             Contract.Ensures(_dirtyFrom <= Contract.OldValue(_dirtyFrom));
@@ -441,11 +441,11 @@
                 _dirtyFrom = index;
         }
 
-        private void updateOffsetsBefore(int listIndex)
+        private void UpdateOffsetsBefore(int listIndex)
         {
             Contract.Requires(0 <= _dirtyFrom && _dirtyFrom <= _offsets.Count);
             Contract.Ensures(_dirtyFrom >= listIndex);
-            Contract.Ensures(offsetsAreCorrectBefore(_dirtyFrom));
+            Contract.Ensures(OffsetsAreCorrectBefore(_dirtyFrom));
 
             if (_dirtyFrom >= listIndex)
                 return;
