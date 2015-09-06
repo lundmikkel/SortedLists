@@ -140,7 +140,11 @@
         /// <inheritdoc/>
         public bool Contains(T item)
         {
-            return IndexOf(item) >= 0;
+            // Don't use IndexOf to avoid updating offsets unnecessarily!
+            var listIndex = getListIndex(item);
+            var list = _lists[listIndex];
+            var itemIndex = getItemIndex(list, item);
+            return itemIndex >= 0;
         }
 
         #endregion
