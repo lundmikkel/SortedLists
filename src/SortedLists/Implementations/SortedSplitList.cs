@@ -5,6 +5,7 @@
     using System.Collections.Generic;
     using System.Diagnostics.Contracts;
     using System.Linq;
+    using System.Text;
     using C5;
 
     public class SortedSplitList<T> : ISortedList<T>
@@ -457,8 +458,17 @@
 
         public override string ToString()
         {
-            // TODO: make indexed string
-            return _lists.ToString();
+            var sb = new StringBuilder("[");
+            var delimiter = "";
+            var i = 0;
+
+            foreach (var item in this)
+            {
+                sb.AppendFormat("{0}{1}: {2}", delimiter, i++, item);
+                delimiter = ", ";
+            }
+            sb.Append("]");
+            return sb.ToString();
         }
 
         #endregion
