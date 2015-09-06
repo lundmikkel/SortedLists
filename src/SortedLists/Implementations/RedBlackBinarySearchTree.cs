@@ -22,6 +22,8 @@
         [ContractInvariantMethod]
         private void invariants()
         {
+            // TODO: Very time consuming
+            /*
             // Does this binary tree satisfy symmetric order?
             Contract.Invariant(isBST(_root, null, null));
             // are the size fields correct?
@@ -30,9 +32,9 @@
             Contract.Invariant(is23(_root));
             // do all paths from root to leaf have same number of black edges?
             Contract.Invariant(isBalanced());
-            // TODO: Very time consuming
             // check that ranks are consistent
-            // Contract.Invariant(isRankConsistent());
+            Contract.Invariant(isRankConsistent());
+            */
         }
 
         // is the tree rooted at x a BST with all keys strictly between min and max

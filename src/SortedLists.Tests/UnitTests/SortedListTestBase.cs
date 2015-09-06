@@ -45,7 +45,7 @@
 
         protected int RandomCount()
         {
-            return Random.Next(10, 20);
+            return Random.Next(50, 101);
         }
 
         protected int RandomNegativeInt()
@@ -932,6 +932,27 @@
         {
             var list = CreateEmptyList<string>();
             AssertThrowsContractException(() => { var dummy = list.Add(null); });
+        }
+
+        [Test]
+        public void Add_EmptyCollection_AddRandomOrder()
+        {
+            var list = CreateEmptyList<int>();
+            var expected = new ArrayList<int>();
+            var count = RandomCount() * 10;
+            var offset = RandomInt();
+
+            for (var i = 0; i < count; ++i)
+                expected.Add(i + offset);
+
+            expected.Shuffle(Random);
+
+            foreach (var i in expected)
+                Assert.That(list.Add(i));
+
+            expected.Sort();
+
+            CollectionAssert.AreEqual(expected, list);
         }
 
         [Test]
