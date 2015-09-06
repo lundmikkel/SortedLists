@@ -34,7 +34,7 @@
             // There is at least one list
             Contract.Invariant(_lists.Count > 0 && _lists[0] != null);
             // No list is longer than the maximum list length
-            Contract.Invariant(Contract.ForAll(_lists, list => list.Capacity <= _deepness));
+            Contract.Invariant(Contract.ForAll(_lists, list => list.Count <= _deepness)); // TODO: Check capacity
             // No consecutive lists have a joined sum smaller than half the maximum list length
             Contract.Invariant(Contract.ForAll(1, _lists.Count, i => _lists[i - 1].Count + _lists[i].Count > _deepness / 2));
 
@@ -64,6 +64,7 @@
 
         #region Constructors
 
+        // TODO: Find a proper default value
         public SortedSplitList(int deepness = 1024)
         {
             Contract.Requires(0 < deepness);
@@ -240,6 +241,17 @@
             {
                 list.Insert(itemIndex, item);
             }
+            else if (itemIndex == list.Count && listIndex == _lists.Count - 1)
+            {
+                _lists.Add(new List<T> { item });
+                // Add dummy value at the end to make list long enough
+                _offsets.Add(-1);
+            }
+            // TODO: This does very little in practice!
+            // else if (itemIndex == list.Count && _lists[listIndex + 1].Count < _deepness)
+            // {
+            //     _lists[listIndex + 1].Insert(0, item);
+            // }
             // Otherwise split list
             else
             {
@@ -250,6 +262,7 @@
                 if (listIndex == _lists.Count - 1 || mid <= _lists[listIndex + 1].Count)
                 {
                     _lists.Insert(listIndex + 1, new List<T>()); // TODO: Set list size to begin with?
+                    // Add dummy value at the end to make list long enough
                     _offsets.Add(-1);
                 }
 
@@ -413,7 +426,7 @@
         {
             Contract.Requires(0 <= index && index <= _lists.Count);
             Contract.Ensures(_dirtyFrom <= Contract.OldValue(_dirtyFrom));
-            
+
             if (_dirtyFrom > index)
                 _dirtyFrom = index;
         }
