@@ -132,7 +132,7 @@
             var list = _lists[listIndex];
             var itemIndex = getItemIndex(list, item);
 
-            updateOffsets();
+            updateOffsetsBefore(listIndex + 1);
             return itemIndex >= 0 ? _offsets[listIndex] + itemIndex : ~(_offsets[listIndex] + ~itemIndex);
         }
 
@@ -240,12 +240,16 @@
             if (list.Count < _deepness)
             {
                 list.Insert(itemIndex, item);
+                // The offset of the next list will be wrong
+                makeDirtyFrom(listIndex + 1);
             }
             else if (itemIndex == list.Count && listIndex == _lists.Count - 1)
             {
+                // The item is added to a new list put a the end
                 _lists.Add(new List<T> { item });
-                // Add dummy value at the end to make list long enough
-                _offsets.Add(-1);
+                // Avoid making any offset dirty by using _count (which hasn't been incremented yet!),
+                // as this is the number of items before it
+                _offsets.Add(_count);
             }
             // TODO: This does very little in practice!
             // else if (itemIndex == list.Count && _lists[listIndex + 1].Count < _deepness)
@@ -275,10 +279,11 @@
                     _lists[listIndex].Insert(itemIndex, item);
                 else
                     _lists[listIndex + 1].Insert(itemIndex - mid, item);
+
+                makeDirtyFrom(listIndex + 1);
             }
 
             ++_count;
-            makeDirtyFrom(listIndex + 1);
 
             return true;
         }
@@ -338,7 +343,7 @@
             _offsets.Add(0);
 
             _count = 0;
-            _dirtyFrom = 0;
+            _dirtyFrom = 1;
         }
 
         #endregion
@@ -346,6 +351,40 @@
         #endregion
 
         #region Methods
+
+        private int getListIndexFromIndex(int index)
+        {
+            Contract.Requires(0 <= index && index < _count);
+
+            // Result index has a list
+            Contract.Ensures(0 <= Contract.Result<int>() && Contract.Result<int>() < _lists.Count && _lists[Contract.Result<int>()] != null);
+            // The list at result index contains index
+            Contract.Ensures(_offsets[Contract.Result<int>()] <= index && index < _offsets[Contract.Result<int>()] + _lists[Contract.Result<int>()].Count);
+            // Ensures the offsets are valid from 0 to result
+            Contract.Ensures(offsetsAreCorrectBefore(Contract.Result<int>() + 1));
+
+            var low = 0;
+            var high = _offsets.Count - 1;
+
+            while (low <= high)
+            {
+                var mid = low + (high - low >> 1);
+
+                // TODO: is this a worthwile optimization? Should it just update the whole index before the binary search?
+                updateOffsetsBefore(mid + 1);
+
+                var compareTo = _offsets[mid].CompareTo(index);
+
+                if (compareTo < 0)
+                    low = mid + 1;
+                else if (compareTo > 0)
+                    high = mid - 1;
+                else
+                    return mid;
+            }
+
+            return high;
+        }
 
         // TODO: Make binary
         private int getListIndex(T item)
@@ -365,40 +404,6 @@
             }
 
             return _lists.Count - 1;
-        }
-
-        private int getListIndexFromIndex(int index)
-        {
-            Contract.Requires(0 <= index && index < _count);
-
-            // Result index has a list
-            Contract.Ensures(0 <= Contract.Result<int>() && Contract.Result<int>() < _lists.Count && _lists[Contract.Result<int>()] != null);
-            // The list at result index contains index
-            Contract.Ensures(_offsets[Contract.Result<int>()] <= index && index < _offsets[Contract.Result<int>()] + _lists[Contract.Result<int>()].Count);
-            // Ensures the offsets are valid from 0 to result
-            Contract.Ensures(offsetsAreCorrectBefore(Contract.Result<int>() + 1));
-
-            // TODO: update only what is necessary
-            updateOffsets();
-
-            var low = 0;
-            var high = _offsets.Count - 1;
-
-            while (low <= high)
-            {
-                var mid = low + (high - low >> 1);
-                var compareTo = _offsets[mid].CompareTo(index);
-
-                if (compareTo < 0)
-                    low = mid + 1;
-                else if (compareTo > 0)
-                    high = mid - 1;
-                else
-                    return mid; // key found
-            }
-
-            // key not found. return insertion point
-            return high;
         }
 
         private int getItemIndex(List<T> list, T item)
@@ -431,17 +436,18 @@
                 _dirtyFrom = index;
         }
 
-        private void updateOffsets()
+        private void updateOffsetsBefore(int listIndex)
         {
             Contract.Requires(0 <= _dirtyFrom && _dirtyFrom <= _offsets.Count);
+            Contract.Ensures(_dirtyFrom >= listIndex);
             Contract.Ensures(offsetsAreCorrectBefore(_dirtyFrom));
 
-            if (_dirtyFrom == _offsets.Count)
+            if (_dirtyFrom >= listIndex)
                 return;
 
-            var offset = _dirtyFrom > 0 ? _offsets[_dirtyFrom - 1] + _lists[_dirtyFrom - 1].Count : 0;
+            var offset = _dirtyFrom == 0 ? 0 : _offsets[_dirtyFrom - 1] + _lists[_dirtyFrom - 1].Count;
 
-            while (_dirtyFrom < _offsets.Count)
+            while (_dirtyFrom < listIndex)
             {
                 _offsets[_dirtyFrom] = offset;
                 offset += _lists[_dirtyFrom].Count;
@@ -451,7 +457,7 @@
 
         public override string ToString()
         {
-            // TODO
+            // TODO: make indexed string
             return _lists.ToString();
         }
 
