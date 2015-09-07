@@ -6,13 +6,14 @@
     using System.Diagnostics.Contracts;
     using System.Linq;
     using C5;
+    using SCG = System.Collections.Generic;
 
     public class SortedList<T> : ISortedList<T>
         where T : IComparable<T>
     {
         #region Fields
 
-        private readonly ArrayList<T> _list;
+        private readonly SCG.IList<T> _list;
         private readonly bool _allowsDuplicates;
 
         #endregion
@@ -33,8 +34,13 @@
         public SortedList(bool allowsDuplicates = false)
         {
             _allowsDuplicates = allowsDuplicates;
-            _list = new ArrayList<T>();
+            _list = CreateEmptyList();
         }
+
+        protected virtual SCG.IList<T> CreateEmptyList()
+        {
+            return new List<T>();
+        } 
 
         #endregion
 
