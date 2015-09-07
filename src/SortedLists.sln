@@ -1,6 +1,6 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
-VisualStudioVersion = 12.0.30723.0
+VisualStudioVersion = 12.0.30501.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SortedLists", "SortedLists\SortedLists.csproj", "{175BDF78-5F4E-407D-B63C-52F7DB65FFFA}"
 EndProject
@@ -10,10 +10,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "misc", "misc", "{C654E9B5-4
 	ProjectSection(SolutionItems) = preProject
 		..\.gitattributes = ..\.gitattributes
 		..\.gitignore = ..\.gitignore
-		SortedLists.sln.DotSettings = SortedLists.sln.DotSettings
 		..\License.txt = ..\License.txt
 		nuget.config = nuget.config
 		..\README.md = ..\README.md
+		SortedLists.sln.DotSettings = SortedLists.sln.DotSettings
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{8A0D0E03-F513-4695-B15C-C2EB037AEA38}"
@@ -24,6 +24,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{8A0D
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SortedLists.Tests", "SortedLists.Tests\SortedLists.Tests.csproj", "{DA2ADBC7-BAA5-482F-A588-AA4BFDD692DB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SortedLists.Tests.Performance", "SortedLists.Tests.Performance\SortedLists.Tests.Performance.csproj", "{9473B5E2-48E9-45AC-912B-ECFE8FFE686B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -39,6 +41,10 @@ Global
 		{DA2ADBC7-BAA5-482F-A588-AA4BFDD692DB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DA2ADBC7-BAA5-482F-A588-AA4BFDD692DB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DA2ADBC7-BAA5-482F-A588-AA4BFDD692DB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9473B5E2-48E9-45AC-912B-ECFE8FFE686B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9473B5E2-48E9-45AC-912B-ECFE8FFE686B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9473B5E2-48E9-45AC-912B-ECFE8FFE686B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9473B5E2-48E9-45AC-912B-ECFE8FFE686B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -46,5 +52,6 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{175BDF78-5F4E-407D-B63C-52F7DB65FFFA} = {8AED3657-3762-4B95-8434-71B300207011}
 		{DA2ADBC7-BAA5-482F-A588-AA4BFDD692DB} = {8AED3657-3762-4B95-8434-71B300207011}
+		{9473B5E2-48E9-45AC-912B-ECFE8FFE686B} = {8AED3657-3762-4B95-8434-71B300207011}
 	EndGlobalSection
 EndGlobal
