@@ -12,8 +12,8 @@
             Benchmarker.Init();
         }
 
-        [Test, TestCaseSource(typeof(SortedListPerformanceTestFactory), "TestCases")]
-        public void Add(SortedListPerformanceTestCaseConfiguration config)
+        [Test, TestCaseSource(typeof(SortedListPerformanceTestFactory), "RandomIntAdd")]
+        public void RandomIntAdd(SortedListPerformanceTestCaseConfiguration<int> config)
         {
             config.Benchmark(config.TestName, config.Size, 3);
         }

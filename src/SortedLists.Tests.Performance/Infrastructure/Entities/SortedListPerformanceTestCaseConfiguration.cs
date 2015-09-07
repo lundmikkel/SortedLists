@@ -1,8 +1,10 @@
 ﻿namespace SortedLists
 {
+    using System;
     using NUnitBenchmarker.Configuration;
 
-    public class SortedListPerformanceTestCaseConfiguration : PerformanceTestCaseConfigurationBase
+    public class SortedListPerformanceTestCaseConfiguration<T> : PerformanceTestCaseConfigurationBase
+        where T : IComparable<T>
     {
         #region Methods
         /// <summary>
@@ -17,8 +19,9 @@
 
         #region Properties
  
-        public ISortedList<int> Target { get; set; }
-        public int[] RandomIntegers { get; set; }
+        public ISortedList<T> Target { get; set; }
+        public T[] RandomItems { get; set; }
+
         #endregion
     }
 }

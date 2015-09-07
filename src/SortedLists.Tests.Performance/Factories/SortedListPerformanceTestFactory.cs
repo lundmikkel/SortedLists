@@ -3,7 +3,6 @@
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using Catel.Collections;
     using NUnitBenchmarker;
     using NUnitBenchmarker.Configuration;
 
@@ -34,7 +33,7 @@
             }
         }
 
-        public IEnumerable<SortedListPerformanceTestCaseConfiguration> TestCases()
+        public IEnumerable<SortedListPerformanceTestCaseConfiguration<int>> RandomIntAdd()
         {
             // Issue in NUnit: even this method is called _earlier_ than TestFixtureSetup....
             // so we can not call GetImplementations here, because FindImplementatins was not called yet :-(
@@ -43,23 +42,23 @@
                    from size in Sizes
                    let prepare = new Action<IPerformanceTestCaseConfiguration>(c =>
                    {
-                       var config = (SortedListPerformanceTestCaseConfiguration) c;
-                       PrepareAdd(size, config);
+                       var config = (SortedListPerformanceTestCaseConfiguration<int>) c;
+                       GenerateRandomOrderUniqueInts(size, config);
                        config.Target = CreateSortedList<int>(implementationType);
                    })
                    let run = new Action<IPerformanceTestCaseConfiguration>(c =>
                    {
-                       var config = (SortedListPerformanceTestCaseConfiguration) c;
+                       var config = (SortedListPerformanceTestCaseConfiguration<int>) c;
                        var target = config.Target;
 
                        for (var i = 0; i < size; i++)
                        {
-                           target.Add(config.RandomIntegers[i]);
+                           target.Add(config.RandomItems[i]);
                        }
                    })
-                   select new SortedListPerformanceTestCaseConfiguration
+                   select new SortedListPerformanceTestCaseConfiguration<int>
                    {
-                       TestName = "Add",
+                       TestName = "RandomIntAdd",
                        TargetImplementationType = implementationType,
                        Identifier = string.Format("{0}", implementationType.GetFriendlyName()),
                        Size = size,
@@ -69,12 +68,12 @@
                    };
         }
 
-        private void PrepareAdd(int size, SortedListPerformanceTestCaseConfiguration config)
+        private void GenerateRandomOrderUniqueInts(int size, SortedListPerformanceTestCaseConfiguration<int> config)
         {
             var list = new C5.ArrayList<int>(size);
             list.AddAll(Enumerable.Range(0, size));
             list.Shuffle();
-            config.RandomIntegers = list.ToArray();
+            config.RandomItems = list.ToArray();
         }
 
         public static ISortedList<T> CreateSortedList<T>(Type implementationType, object[] parameters = null)
