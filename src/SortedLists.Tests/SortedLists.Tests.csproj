@@ -145,6 +145,8 @@
     <Compile Include="..\SolutionAssemblyInfo.cs">
       <Link>Properties\SolutionAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="ImplementationTests\SortedGapBufferTest.cs" />
+    <Compile Include="ImplementationTests\SortedArrayListTest.cs" />
     <Compile Include="ImplementationTests\SortedSplitListTest.cs" />
     <Compile Include="InterfaceTests\SortedListTestBase.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

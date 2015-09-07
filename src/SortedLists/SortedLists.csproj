@@ -142,7 +142,11 @@
       <Link>Properties\SolutionAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="Extensions\EnumerableExtensions.cs" />
+    <Compile Include="ILists\GapBuffer+Enumerator.cs" />
+    <Compile Include="ILists\GapBuffer.cs" />
     <Compile Include="Implementations\RedBlackBinarySearchTree.cs" />
+    <Compile Include="Implementations\SortedGapBuffer.cs" />
+    <Compile Include="Implementations\SortedArrayList.cs" />
     <Compile Include="Implementations\SortedSplitList.cs" />
     <Compile Include="Implementations\SortedList.cs" />
     <Compile Include="Interfaces\ISortedList.cs" />
