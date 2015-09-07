@@ -17,5 +17,11 @@
         {
             config.Benchmark(config.TestName, config.Size, 3);
         }
+
+        [Test, TestCaseSource(typeof(SortedListPerformanceTestFactory), "RandomStringAdd")]
+        public void RandomStringAdd(SortedListPerformanceTestCaseConfiguration<string> config)
+        {
+            config.Benchmark(config.TestName, config.Size, 3);
+        }
     }
 }

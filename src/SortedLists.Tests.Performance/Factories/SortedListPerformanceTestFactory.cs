@@ -39,12 +39,13 @@
             // so we can not call GetImplementations here, because FindImplementatins was not called yet :-(
 
             return from implementationType in ImplementationTypes
+                   //from parameters in GetParameters(implementationType)
                    from size in Sizes
                    let prepare = new Action<IPerformanceTestCaseConfiguration>(c =>
                    {
                        var config = (SortedListPerformanceTestCaseConfiguration<int>) c;
                        GenerateRandomOrderUniqueInts(size, config);
-                       config.Target = CreateSortedList<int>(implementationType);
+                       config.Target = CreateSortedList<int>(implementationType); //, parameters);
                    })
                    let run = new Action<IPerformanceTestCaseConfiguration>(c =>
                    {
@@ -60,6 +61,62 @@
                    {
                        TestName = "RandomIntAdd",
                        TargetImplementationType = implementationType,
+                       Identifier = string.Format("{0}({1})", implementationType.GetFriendlyName()), //, parameters.FirstOrDefault()),
+                       Size = size,
+                       Prepare = prepare,
+                       Run = run,
+                       IsReusable = false
+                   };
+        }
+
+        private IEnumerable<object[]> GetParameters(Type implementationType)
+        {
+            if (implementationType == typeof(SortedSplitList<>))
+            {
+                return new[]
+                {
+                    //new object[] { 128 },
+                    new object[] { 256 },
+                    new object[] { 512 },
+                    new object[] { 1024 },
+                    //new object[] { 2048 },
+                };
+            }
+            if (implementationType == typeof(SortedList<>))
+            {
+                return new[] { new object[] { false } };
+            }
+
+            return new[] { new object[] { } };
+        }
+
+        public IEnumerable<SortedListPerformanceTestCaseConfiguration<string>> RandomStringAdd()
+        {
+            // Issue in NUnit: even this method is called _earlier_ than TestFixtureSetup....
+            // so we can not call GetImplementations here, because FindImplementatins was not called yet :-(
+
+            return from implementationType in ImplementationTypes
+                   from size in Sizes
+                   let prepare = new Action<IPerformanceTestCaseConfiguration>(c =>
+                   {
+                       var config = (SortedListPerformanceTestCaseConfiguration<string>) c;
+                       GenerateRandomPrefixEqualStrings(size, config);
+                       config.Target = CreateSortedList<string>(implementationType);
+                   })
+                   let run = new Action<IPerformanceTestCaseConfiguration>(c =>
+                   {
+                       var config = (SortedListPerformanceTestCaseConfiguration<string>) c;
+                       var target = config.Target;
+
+                       for (var i = 0; i < size; i++)
+                       {
+                           target.Add(config.RandomItems[i]);
+                       }
+                   })
+                   select new SortedListPerformanceTestCaseConfiguration<string>
+                   {
+                       TestName = "RandomStringAdd",
+                       TargetImplementationType = implementationType,
                        Identifier = string.Format("{0}", implementationType.GetFriendlyName()),
                        Size = size,
                        Prepare = prepare,
@@ -74,6 +131,26 @@
             list.AddAll(Enumerable.Range(0, size));
             list.Shuffle();
             config.RandomItems = list.ToArray();
+        }
+
+        private void GenerateRandomPrefixEqualStrings(int size, SortedListPerformanceTestCaseConfiguration<string> config)
+        {
+            var list = new C5.ArrayList<string>(size);
+            var prefix = RandomString(100);
+            list.AddAll(Enumerable.Range(0, size).Select(i => prefix + RandomString()));
+            list.Shuffle();
+            config.RandomItems = list.ToArray();
+        }
+
+        public static string RandomString(int length = 8)
+        {
+            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+            var random = new Random();
+            return new string(Enumerable
+                .Repeat(chars, length)
+                .Select(s => s[random.Next(s.Length)])
+                .ToArray()
+            );
         }
 
         public static ISortedList<T> CreateSortedList<T>(Type implementationType, object[] parameters = null)
