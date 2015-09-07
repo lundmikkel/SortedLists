@@ -103,7 +103,7 @@
         {
             get
             {
-                var listIndex = GetListIndexFromIndex(index);
+                var listIndex = GetListIndex(index);
                 var itemIndex = index - _offsets[listIndex];
                 return _lists[listIndex][itemIndex];
             }
@@ -165,7 +165,7 @@
         /// <inheritdoc/>
         public IEnumerable<T> EnumerateFromIndex(int index)
         {
-            var listIndex = GetListIndexFromIndex(index);
+            var listIndex = GetListIndex(index);
             var itemIndex = index - _offsets[listIndex];
 
             for (var i = listIndex; i < _lists.Count; ++i)
@@ -183,9 +183,9 @@
         {
             // TODO: Implement using EnumerateFromIndex and a counter?
 
-            var listFromIndex = GetListIndexFromIndex(inclusiveFrom);
+            var listFromIndex = GetListIndex(inclusiveFrom);
             var itemFromIndex = inclusiveFrom - _offsets[listFromIndex];
-            var listToIndex = GetListIndexFromIndex(exclusiveTo);
+            var listToIndex = GetListIndex(exclusiveTo);
             var itemToIndex = exclusiveTo - _offsets[listToIndex];
 
             for (var i = listFromIndex; i <= listToIndex; ++i)
@@ -212,7 +212,7 @@
         /// <inheritdoc/>
         public IEnumerable<T> EnumerateBackwardsFromIndex(int index)
         {
-            var listIndex = GetListIndexFromIndex(index);
+            var listIndex = GetListIndex(index);
             var itemIndex = index - _offsets[listIndex];
 
             for (var i = listIndex; i >= 0; --i)
@@ -358,7 +358,7 @@
 
         #region Methods
 
-        private int GetListIndexFromIndex(int index)
+        private int GetListIndex(int index)
         {
             Contract.Requires(0 <= index && index < _count);
 
@@ -392,24 +392,35 @@
             return high;
         }
 
-        // TODO: Make binary
         private int GetListIndex(T item)
         {
             Contract.Requires(item != null);
             Contract.Ensures(0 <= Contract.Result<int>() && Contract.Result<int>() < _lists.Count);
 
+            // Return first list if we only have one
             if (_lists.Count <= 1)
                 return 0;
 
-            for (int i = 1; i < _lists.Count; i++)
-            {
-                var compareTo = _lists[i][0].CompareTo(item);
+            var low = 0;
+            var high = _lists.Count - 1;
 
-                if (compareTo > 0)
-                    return i - 1;
+            while (low <= high)
+            {
+                var mid = low + (high - low >> 1);
+
+                var compareTo = _lists[mid][0].CompareTo(item);
+
+                if (compareTo < 0)
+                    low = mid + 1;
+                else if (compareTo > 0)
+                    high = mid - 1;
+                else
+                    return mid;
             }
 
-            return _lists.Count - 1;
+            // Fix the return value when item isn't the first element in a list
+            var index = low;
+            return index <= 1 ? 0 : (index < _lists.Count ? index : _lists.Count) - 1;
         }
 
         private int getItemIndex(List<T> list, T item)
