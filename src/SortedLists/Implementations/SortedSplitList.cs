@@ -270,7 +270,8 @@
                 // or if the next list can not accommodate the second half of the list
                 if (listIndex == _lists.Count - 1 || mid <= _lists[listIndex + 1].Count)
                 {
-                    _lists.Insert(listIndex + 1, new List<T>()); // TODO: Set list size to begin with?
+                    // Ensure room for the mid elements being moved to the list
+                    _lists.Insert(listIndex + 1, new List<T>(mid));
                     // Add dummy value at the end to make list long enough
                     _offsets.Add(-1);
                 }
