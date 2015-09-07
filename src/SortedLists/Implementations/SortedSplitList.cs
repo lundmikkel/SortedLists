@@ -65,8 +65,7 @@
 
         #region Constructors
 
-        // TODO: Find a proper default value using performance testing
-        public SortedSplitList(int deepness = 1024)
+        public SortedSplitList(int deepness = 512)
         {
             Contract.Requires(0 < deepness);
             // Ensures _deepness is a power of two
