@@ -132,7 +132,7 @@
         {
             var listIndex = GetListIndex(item);
             var list = _lists[listIndex];
-            var itemIndex = getItemIndex(list, item);
+            var itemIndex = GetItemIndex(list, item);
 
             UpdateOffsetsBefore(listIndex + 1);
             return itemIndex >= 0 ? _offsets[listIndex] + itemIndex : ~(_offsets[listIndex] + ~itemIndex);
@@ -144,7 +144,7 @@
             // Don't use IndexOf to avoid updating offsets unnecessarily!
             var listIndex = GetListIndex(item);
             var list = _lists[listIndex];
-            var itemIndex = getItemIndex(list, item);
+            var itemIndex = GetItemIndex(list, item);
             return itemIndex >= 0;
         }
 
@@ -234,7 +234,7 @@
             // Find the proper position for the item
             var listIndex = GetListIndex(item);
             var list = _lists[listIndex];
-            var itemIndex = getItemIndex(list, item);
+            var itemIndex = GetItemIndex(list, item);
 
             // Duplicate found
             if (0 <= itemIndex)
@@ -301,7 +301,7 @@
             // Find the proper position for the item
             var listIndex = GetListIndex(item);
             var list = _lists[listIndex];
-            var itemIndex = getItemIndex(list, item);
+            var itemIndex = GetItemIndex(list, item);
 
             // Item was not found
             if (itemIndex < 0)
@@ -424,7 +424,7 @@
             return index <= 1 ? 0 : (index < _lists.Count ? index : _lists.Count) - 1;
         }
 
-        private int getItemIndex(List<T> list, T item)
+        private static int GetItemIndex(System.Collections.Generic.IList<T> list, T item)
         {
             var low = 0;
             var high = list.Count - 1;
