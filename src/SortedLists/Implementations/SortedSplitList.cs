@@ -39,6 +39,7 @@
             // No consecutive lists have a joined sum smaller than half the maximum list length
             Contract.Invariant(Contract.ForAll(1, _lists.Count, i => _lists[i - 1].Count + _lists[i].Count > _deepness / 2));
 
+            Contract.Invariant(_dirtyFrom > 0);
             // The number of lists must match the number of offset values
             Contract.Invariant(_lists.Count == _offsets.Count);
             // The offsets are either dirty, or correct
@@ -77,6 +78,7 @@
             _deepness = deepness;
             _lists = new List<List<T>> { new List<T>() };
             _offsets = new List<int> { 0 };
+            _dirtyFrom = 1;
         }
 
         #endregion
@@ -449,7 +451,7 @@
             Contract.Ensures(_dirtyFrom <= Contract.OldValue(_dirtyFrom));
 
             if (_dirtyFrom > index)
-                _dirtyFrom = index;
+                _dirtyFrom = index > 0 ? index : 1;
         }
 
         private void UpdateOffsetsBefore(int listIndex)
