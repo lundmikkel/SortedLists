@@ -30,6 +30,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="C5, Version=2.3.5280.26713, Culture=neutral, PublicKeyToken=282361b99ded7e8e, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\lib\C5.2.3.0.1\lib\net40\C5.dll</HintPath>
+    </Reference>
     <Reference Include="Catel.Core">
       <HintPath>..\..\lib\Catel.Core.4.2.0-unstable0061\lib\net45\Catel.Core.dll</HintPath>
     </Reference>
@@ -85,6 +89,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Factories\SortedListPerformanceTestFactory.cs" />
+    <Compile Include="Infrastructure\Entities\SortedListPerformanceTestCaseConfiguration.cs" />
     <Compile Include="InterfaceTests\SortedListPerformanceTest.cs" />
     <Compile Include="NUnitBenchmarker\NUnitBenchmarkerDemoTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -92,6 +98,13 @@
   <ItemGroup>
     <None Include="App.config" />
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup />
+  <ItemGroup>
+    <ProjectReference Include="..\SortedLists\SortedLists.csproj">
+      <Project>{175BDF78-5F4E-407D-B63C-52F7DB65FFFA}</Project>
+      <Name>SortedLists</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
