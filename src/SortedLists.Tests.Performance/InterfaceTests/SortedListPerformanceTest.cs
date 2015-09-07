@@ -15,7 +15,7 @@
         [Test, TestCaseSource(typeof(SortedListPerformanceTestFactory), "TestCases")]
         public void Add(SortedListPerformanceTestCaseConfiguration config)
         {
-            config.Benchmark(config.TestName, config.Size, 1);
+            config.Benchmark(config.TestName, config.Size, 3);
         }
     }
 }
