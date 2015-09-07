@@ -9,16 +9,17 @@
 
     public class SortedListPerformanceTestFactory
     {
+        private const int H = 100;
         private const int K = 1000;
 
-        public Type[] ImplementationTypes
+        public IEnumerable<Type> ImplementationTypes
         {
             get
             {
                 return new[]{
-                    //typeof (SortedList<int>),
-                    typeof (RedBlackBinarySearchTree<int>),
-                    typeof (SortedSplitList<int>),
+                    typeof (SortedList<>),
+                    typeof (RedBlackBinarySearchTree<>),
+                    typeof (SortedSplitList<>),
                 };
             }
         }
@@ -28,6 +29,7 @@
             get
             {
                 //return new[] { 5 * 1, 100 * 1, 200 * 1, 400 * 1, 800 * 1, 1600 * 1 };
+                return new[] { 5 * H, 100 * H, 200 * H, 400 * H, 800 * H, 1600 * H };
                 return new[] { 5 * K, 100 * K, 200 * K, 400 * K, 800 * K, 1600 * K };
             }
         }
@@ -42,11 +44,8 @@
                    let prepare = new Action<IPerformanceTestCaseConfiguration>(c =>
                    {
                        var config = (SortedListPerformanceTestCaseConfiguration) c;
-                       PrepareAdd(size, implementationType, config);
-
-                       // JIT warm-up
-                       var list = CreateSortedList<int>(config.Target.GetType());
-                       Enumerable.Range(0, 100).ForEach(i => list.Add(i));
+                       PrepareAdd(size, config);
+                       config.Target = CreateSortedList<int>(implementationType);
                    })
                    let run = new Action<IPerformanceTestCaseConfiguration>(c =>
                    {
@@ -70,23 +69,20 @@
                    };
         }
 
-        private void PrepareAdd(int size, Type type, SortedListPerformanceTestCaseConfiguration config)
+        private void PrepareAdd(int size, SortedListPerformanceTestCaseConfiguration config)
         {
             var list = new C5.ArrayList<int>(size);
             list.AddAll(Enumerable.Range(0, size));
             list.Shuffle();
-
             config.RandomIntegers = list.ToArray();
-
-            config.Target = CreateSortedList<int>(type);
         }
 
-        public static ISortedList<T> CreateSortedList<T>(Type implementationType)
+        public static ISortedList<T> CreateSortedList<T>(Type implementationType, object[] parameters = null)
             where T : IComparable<T>
         {
-            var constructorInfo = implementationType.GetConstructors().First(ci => !ci.GetParameters().Any() || ci.GetParameters().All(p => p.IsOptional));
-            var parameters = constructorInfo.GetParameters().Select(p => Type.Missing).ToArray();
-            return (ISortedList<T>) constructorInfo.Invoke(parameters);
+            var genericType = implementationType.MakeGenericType(typeof(T));
+            var constructorInfo = genericType.GetConstructors().First(ci => !ci.GetParameters().Any() || ci.GetParameters().All(p => p.IsOptional));
+            return (ISortedList<T>) constructorInfo.Invoke(parameters ?? constructorInfo.GetParameters().Select(p => Type.Missing).ToArray());
         }
     }
 }
