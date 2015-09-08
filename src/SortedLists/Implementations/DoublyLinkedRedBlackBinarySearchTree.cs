@@ -15,7 +15,7 @@
         private const bool Black = false;
 
         private Node _root;
-        private readonly Node _first, _last;
+        private readonly Node _sentinel;
 
         #endregion
 
@@ -25,11 +25,9 @@
         private void invariants()
         {
             // First and last point to each other if the collection is empty
-            Contract.Invariant(!IsEmpty || _first.Next == _last && _last.Previous == _first);
+            Contract.Invariant(!IsEmpty || _sentinel.Next == _sentinel && _sentinel.Previous == _sentinel);
             // First and last are empty but the next and previous pointers respectively
-            Contract.Invariant(_first.Previous == null && _first.Right == null && _first.Left == null && _first.Count == 0);
-            Contract.Invariant(_last.Next == null && _last.Right == null && _last.Left == null && _last.Count == 0);
-            Contract.Invariant(_first != _last);
+            Contract.Invariant(_sentinel.Right == null && _sentinel.Left == null && _sentinel.Count == 0);
 
             // Does this binary tree satisfy symmetric order?
             Contract.Invariant(isBST(_root, null, null));
@@ -209,10 +207,9 @@
         private IEnumerable<T> enumerateFrom(Node node)
         {
             Contract.Requires(node != null);
-            Contract.Requires(node != _first);
 
-            // Iterate until the _last node
-            while (node != _last)
+            // Iterate until the _sentinel node
+            while (node != _sentinel)
             {
                 yield return node.Key;
                 node = node.Next;
@@ -223,10 +220,9 @@
         private IEnumerable<T> enumerateBackwardsFrom(Node node)
         {
             Contract.Requires(node != null);
-            Contract.Requires(node != _last);
 
-            // Iterate until the _first node
-            while (node != _first)
+            // Iterate until the _sentinel node
+            while (node != _sentinel)
             {
                 yield return node.Key;
                 node = node.Previous;
@@ -361,16 +357,12 @@
 
         public DoublyLinkedRedBlackBinarySearchTree()
         {
-            Contract.Ensures(_first != null);
-            Contract.Ensures(_last != null);
-            Contract.Ensures(_first.Next == _last);
-            Contract.Ensures(_last.Previous == _first);
-
-            _first = new Node();
-            _last = new Node();
-
-            _first.Next = _last;
-            _last.Previous = _first;
+            Contract.Ensures(_sentinel != null);
+            Contract.Ensures(_sentinel.Next == _sentinel);
+            Contract.Ensures(_sentinel.Previous == _sentinel);
+            
+            _sentinel = new Node();
+            _sentinel.Next = _sentinel.Previous = _sentinel;
         }
 
         #endregion
@@ -396,9 +388,9 @@
 
         public T this[int i] { get { return indexer(_root, i).Key; } }
 
-        public T First { get { return _first.Next.Key; } }
+        public T First { get { return _sentinel.Next.Key; } }
 
-        public T Last { get { return _last.Previous.Key; } }
+        public T Last { get { return _sentinel.Previous.Key; } }
 
         #endregion
 
@@ -422,7 +414,7 @@
 
         public IEnumerable<T> EnumerateBackwards()
         {
-            return enumerateBackwardsFrom(_last.Previous);
+            return enumerateBackwardsFrom(_sentinel.Previous);
         }
 
         public IEnumerable<T> EnumerateBackwardsFromIndex(int index)
@@ -432,7 +424,7 @@
 
         public IEnumerator<T> GetEnumerator()
         {
-            return enumerateFrom(_first.Next).GetEnumerator();
+            return enumerateFrom(_sentinel.Next).GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
@@ -478,7 +470,7 @@
         {
             var itemWasAdded = false;
 
-            _root = add(item, _root, _first, ref itemWasAdded);
+            _root = add(item, _root, _sentinel, ref itemWasAdded);
             _root.Color = Black;
 
             return itemWasAdded;
@@ -506,13 +498,11 @@
         public void Clear()
         {
             Contract.Ensures(_root == null);
-            Contract.Ensures(_first.Next == _last);
-            Contract.Ensures(_last.Previous == _first);
+            Contract.Ensures(_sentinel.Next == _sentinel);
+            Contract.Ensures(_sentinel.Previous == _sentinel);
 
             _root = null;
-
-            _first.Next = _last;
-            _last.Previous = _first;
+            _sentinel.Next = _sentinel.Previous = _sentinel;
         }
 
         #endregion
