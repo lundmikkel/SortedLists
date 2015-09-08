@@ -28,7 +28,6 @@ namespace SortedLists
     using System.Collections.ObjectModel;
     using System.Linq;
     using NUnit.Framework;
-    using TrentTobler.Collections;
 
     [TestFixture]
     public class BTreeTests : SortedListTestBase
