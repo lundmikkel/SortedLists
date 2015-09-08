@@ -3,8 +3,6 @@
     using System;
     using System.Collections.Generic;
     using System.Collections;
-    using System.Threading;
-    using System.Globalization;
     using System.Diagnostics;
 
     /// <summary>
@@ -14,7 +12,7 @@
     /// <typeparam name="T">The type of elements in the buffer.</typeparam>
     [Serializable]
     [DebuggerDisplay("Count = {Count}")]
-    public partial class GapBuffer<T> : IList<T>, IList
+    public partial class GapBuffer<T> : IList<T>
     {
         #region Fields
 
@@ -24,10 +22,7 @@
         private int _gapStart;
         private int _gapEnd;
         private int _version;
-
-        [NonSerialized]
-        private object _syncRoot;
-
+        
         #endregion Fields
 
 
@@ -110,35 +105,10 @@
         }
 
 
-        // Explicit IList implementation
-        bool IList.IsFixedSize { get { return false; } }
-
-
-        // Explicit IList implementation
-        bool IList.IsReadOnly { get { return false; } }
-
-
         // Explicit ICollection<T> implementation
         bool ICollection<T>.IsReadOnly { get { return false; } }
 
-
-        // Explicit ICollection implementation
-        bool ICollection.IsSynchronized { get { return false; } }
-
-
-        // Explicit ICollection implementation
-        object ICollection.SyncRoot
-        {
-            get
-            {
-                if (_syncRoot == null)
-                    Interlocked.CompareExchange(ref _syncRoot, new object(), null);
-
-                return _syncRoot;
-            }
-        }
-
-
+        
         /// <summary>
         /// Gets or sets the element at the specified index. 
         /// </summary>
@@ -176,18 +146,6 @@
             }
         }
 
-
-        // Explicit IList implementation
-        object IList.this[int index]
-        {
-            get { return this[index]; }
-            set
-            {
-                VerifyValueType(value);
-                this[index] = (T) value;
-            }
-        }
-
         #endregion Properties
 
 
@@ -203,14 +161,6 @@
             Insert(Count, item);
         }
 
-
-        // Explicit IList implementation
-        int IList.Add(object value)
-        {
-            VerifyValueType(value);
-            Add((T) value);
-            return (Count - 1);
-        }
 
 
         /// <summary>
@@ -267,14 +217,7 @@
             return false;
         }
 
-
-        // Explicit IList implementation
-        bool IList.Contains(object value)
-        {
-            return IsCompatibleObject(value) && Contains((T) value);
-        }
-
-
+        
         /// <summary>
         /// Copies the <see cref="GapBuffer{T}"/> to a compatible one-dimensional array, 
         /// starting at the specified index of the target array.
@@ -312,21 +255,7 @@
             Array.Copy(_buffer, _gapEnd, array, arrayIndex + _gapStart, _buffer.Length - _gapEnd);
         }
 
-
-        // Explicit ICollection implementation
-        void ICollection.CopyTo(Array array, int arrayIndex)
-        {
-            try
-            {
-                CopyTo((T[]) array, arrayIndex);
-            }
-            catch (InvalidCastException)
-            {
-                throw new ArgumentException();
-            }
-        }
-
-
+        
         /// <summary>
         /// Returns an enumerator that iterates through the <see cref="GapBuffer{T}"/>.
         /// </summary>
@@ -376,14 +305,7 @@
 
             return index;
         }
-
-
-        // Explicit IList implementation
-        int IList.IndexOf(object item)
-        {
-            return IsCompatibleObject(item) ? IndexOf((T) item) : -1;
-        }
-
+        
 
         /// <summary>
         /// Inserts an element into the <see cref="GapBuffer{T}"/> at the specified index. Consecutive operations
@@ -410,15 +332,7 @@
             _version++;
         }
 
-
-        // Explicit IList implementation
-        void IList.Insert(int index, object item)
-        {
-            VerifyValueType(item);
-            Insert(index, (T) item);
-        }
-
-
+        
         /// <summary>
         /// Inserts the elements of a collection into the <see cref="GapBuffer{T}"/> at the specified index. 
         /// Consecutive operations at or near previous inserts are optimized.
@@ -491,14 +405,6 @@
             // Remove the item
             RemoveAt(index);
             return true;
-        }
-
-
-        // Explicit IList implementation
-        void IList.Remove(object item)
-        {
-            if (IsCompatibleObject(item))
-                Remove((T) item);
         }
 
 
@@ -636,27 +542,6 @@
                 // Calculate a new size (double the size necessary)
                 Capacity = Math.Max((Count + required) * 2, MinCapacity);
             }
-        }
-
-
-        private static bool IsCompatibleObject(object value)
-        {
-            // Ensure the object is compatible with the generic type
-
-            if (!(value is T) && ((value != null) || typeof(T).IsValueType))
-                return false;
-
-            return true;
-        }
-
-
-        private static void VerifyValueType(object value)
-        {
-            // Throw an exception if the object is not compatible with
-            // the generic type
-
-            if (!IsCompatibleObject(value))
-                throw new ArgumentException();
         }
 
         #endregion Methods
