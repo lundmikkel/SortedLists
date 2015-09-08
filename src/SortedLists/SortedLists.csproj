@@ -145,6 +145,7 @@
     <Compile Include="ILists\GapBuffer+Enumerator.cs" />
     <Compile Include="ILists\GapBuffer.cs" />
     <Compile Include="Implementations\BTree.cs" />
+    <Compile Include="Implementations\DoublyLinkedRedBlackBinarySearchTree.cs" />
     <Compile Include="Implementations\RedBlackBinarySearchTree.cs" />
     <Compile Include="Implementations\BclSortedList.cs" />
     <Compile Include="Implementations\SortedArray.cs" />

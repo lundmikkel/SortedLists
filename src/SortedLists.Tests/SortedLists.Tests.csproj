@@ -146,6 +146,7 @@
       <Link>Properties\SolutionAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="ImplementationTests\BTreeTest.cs" />
+    <Compile Include="ImplementationTests\DoublyLinkedRedBlackBinarySearchTreeTest.cs" />
     <Compile Include="ImplementationTests\SortedGapBufferTest.cs" />
     <Compile Include="ImplementationTests\SortedArrayListTest.cs" />
     <Compile Include="ImplementationTests\SortedArrayTest.cs" />
