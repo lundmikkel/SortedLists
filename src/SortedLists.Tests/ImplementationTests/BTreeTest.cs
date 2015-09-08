@@ -20,17 +20,21 @@
 //NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 //ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-using System;
-using System.Collections.ObjectModel;
-using System.Linq;
-using NUnit.Framework;
-using System.Collections.Generic;
 
-namespace TrentTobler.Collections.Sorted.Tests
+namespace SortedLists
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Collections.ObjectModel;
+    using System.Linq;
+    using NUnit.Framework;
+    using TrentTobler.Collections;
+
     [TestFixture]
-    public class BTreeTests
+    public class BTreeTests : SortedListTestBase
     {
+
+
         #region Implementation - Helpers
 
         static Random rand = new Random(101);
@@ -57,7 +61,7 @@ namespace TrentTobler.Collections.Sorted.Tests
 
         static BTree<int> CreateSampleTree()
         {
-            BTree<int> b = new BTree<int>(testNodeCapacity);
+            BTree<int> b = new BTree<int>(nodeCapacity: testNodeCapacity);
             b.AddRange(sampleList);
             return b;
         }
@@ -76,17 +80,14 @@ namespace TrentTobler.Collections.Sorted.Tests
             var orderedDuplicates = new List<int>(duplicates);
             orderedDuplicates.Sort();
 
-            var b = new BTree<int>(testNodeCapacity)
-            {
-                AllowDuplicates = true,
-            };
+            var b = new BTree<int>(true, testNodeCapacity);
 
             b.AddRange(duplicates);
             b.AssertEqual(orderedDuplicates);
-            Assert.IsFalse(b.WhereLessOrEqualBackwards(-1).Any());
-            Assert.IsFalse(b.WhereGreaterOrEqual(1001).Any());
-            b.WhereGreaterOrEqual(-1).AssertEqual(orderedDuplicates);
-            b.WhereLessOrEqualBackwards(1001).Reverse().AssertEqual(orderedDuplicates);
+            Assert.IsFalse(b.EnumerateBackwardsFrom(-1).Any());
+            Assert.IsFalse(b.EnumerateFrom(1001).Any());
+            b.EnumerateFrom(-1).AssertEqual(orderedDuplicates);
+            b.EnumerateBackwardsFrom(1001).Reverse().AssertEqual(orderedDuplicates);
 
             for (int i = 1; i < orderedDuplicates.Count; ++i)
             {
@@ -94,15 +95,15 @@ namespace TrentTobler.Collections.Sorted.Tests
                 var here = orderedDuplicates[i];
                 if (prev != here)
                 {
-                    Assert.AreEqual(i, b.FirstIndexWhereGreaterThan(prev));
-                    Assert.AreEqual(i - 1, b.LastIndexWhereLessThan(here));
+                    Assert.AreEqual(i, b.IndexOfFirstGreaterThan(prev));
+                    Assert.AreEqual(i - 1, b.IndexOfLastLessThan(here));
                     Assert.IsTrue(b.Contains(prev));
                     Assert.IsTrue(b.Contains(here));
 
-                    Assert.AreEqual(here, b.WhereGreaterOrEqual(here).First());
-                    Assert.AreEqual(here, b.WhereLessOrEqualBackwards(here).First());
-                    b.WhereGreaterOrEqual(here).AssertEqual(orderedDuplicates.Skip(i));
-                    b.WhereLessOrEqualBackwards(prev).AssertEqual(orderedDuplicates.Take(i).Reverse());
+                    Assert.AreEqual(here, b.EnumerateFrom(here).First());
+                    Assert.AreEqual(here, b.EnumerateBackwardsFrom(here).First());
+                    b.EnumerateFrom(here).AssertEqual(orderedDuplicates.Skip(i));
+                    b.EnumerateBackwardsFrom(prev).AssertEqual(orderedDuplicates.Take(i).Reverse());
                 }
             }
         }
@@ -117,7 +118,7 @@ namespace TrentTobler.Collections.Sorted.Tests
         public void At()
         {
             var b = CreateSampleTree();
-            Enumerable.Range(0, b.Count).Select(i => b.At(i)).AssertEqual(sortedList);
+            Enumerable.Range(0, b.Count).Select(i => b[i]).AssertEqual(sortedList);
         }
 
         [Test]
@@ -185,9 +186,9 @@ namespace TrentTobler.Collections.Sorted.Tests
             var b = CreateSampleTree();
             for (int i = 0; i < sortedList.Count; ++i)
             {
-                Assert.AreEqual(i, b.FirstIndexWhereGreaterThan(sortedList[i] - 1), "wrong index returned (existing key).");
-                Assert.AreEqual(i + 1, b.FirstIndexWhereGreaterThan(sortedList[i]), "wrong index returned (existing key).");
-                Assert.AreEqual(i + 1, b.FirstIndexWhereGreaterThan(sortedList[i] + 1), "wrong index returned (existing key).");
+                Assert.AreEqual(i, b.IndexOfFirstGreaterThan(sortedList[i] - 1), "wrong index returned (existing key).");
+                Assert.AreEqual(i + 1, b.IndexOfFirstGreaterThan(sortedList[i]), "wrong index returned (existing key).");
+                Assert.AreEqual(i + 1, b.IndexOfFirstGreaterThan(sortedList[i] + 1), "wrong index returned (existing key).");
             }
         }
 
@@ -197,9 +198,9 @@ namespace TrentTobler.Collections.Sorted.Tests
             var b = CreateSampleTree();
             for (int i = 0; i < sortedList.Count; ++i)
             {
-                Assert.AreEqual(i - 1, b.LastIndexWhereLessThan(sortedList[i] - 1), "wrong index returned (existing key).");
-                Assert.AreEqual(i - 1, b.LastIndexWhereLessThan(sortedList[i]), "wrong index returned (existing key).");
-                Assert.AreEqual(i, b.LastIndexWhereLessThan(sortedList[i] + 1), "wrong index returned (existing key).");
+                Assert.AreEqual(i - 1, b.IndexOfLastLessThan(sortedList[i] - 1), "wrong index returned (existing key).");
+                Assert.AreEqual(i - 1, b.IndexOfLastLessThan(sortedList[i]), "wrong index returned (existing key).");
+                Assert.AreEqual(i, b.IndexOfLastLessThan(sortedList[i] + 1), "wrong index returned (existing key).");
             }
         }
 
@@ -223,10 +224,10 @@ namespace TrentTobler.Collections.Sorted.Tests
             var b = CreateSampleTree();
             for (int i = 0; i < sortedList.Count; ++i)
             {
-                b.WhereGreaterOrEqual(sortedList[i]).AssertEqual(sortedList.Where(n => n >= sortedList[i]));
-                b.WhereGreaterOrEqual(sortedList[i] - 1).AssertEqual(sortedList.Where(n => n >= sortedList[i] - 1));
+                b.EnumerateFrom(sortedList[i]).AssertEqual(sortedList.Where(n => n >= sortedList[i]));
+                b.EnumerateFrom(sortedList[i] - 1).AssertEqual(sortedList.Where(n => n >= sortedList[i] - 1));
             }
-            b.WhereGreaterOrEqual(sortedList.Last() + 1).AssertEqual(Enumerable.Empty<int>());
+            b.EnumerateFrom(sortedList.Last() + 1).AssertEqual(Enumerable.Empty<int>());
         }
 
         [Test]
@@ -236,8 +237,8 @@ namespace TrentTobler.Collections.Sorted.Tests
             var r = sortedList.Reverse().ToArray();
             for (int i = 0; i < r.Length; ++i)
             {
-                b.WhereLessOrEqualBackwards(r[i]).AssertEqual(r.Where(n => n <= r[i]));
-                b.WhereLessOrEqualBackwards(r[i] - 1).AssertEqual(r.Where(n => n <= r[i] - 1));
+                b.EnumerateBackwardsFrom(r[i]).AssertEqual(r.Where(n => n <= r[i]));
+                b.EnumerateBackwardsFrom(r[i] - 1).AssertEqual(r.Where(n => n <= r[i] - 1));
             }
         }
 
@@ -247,7 +248,7 @@ namespace TrentTobler.Collections.Sorted.Tests
             var b = CreateSampleTree();
             var index = sortedList.Count / 3;
             var expected = sortedList.Skip(index);
-            b.ForwardFromIndex(index).AssertEqual(expected);
+            b.EnumerateFromIndex(index).AssertEqual(expected);
         }
 
         [Test]
@@ -256,10 +257,20 @@ namespace TrentTobler.Collections.Sorted.Tests
             var b = CreateSampleTree();
             var index = sortedList.Count / 3;
             var expected = sortedList.Take(index + 1).Reverse();
-            b.BackwardFromIndex(index).AssertEqual(expected);
+            b.EnumerateBackwardsFromIndex(index).AssertEqual(expected);
         }
 
         #endregion
+
+        protected override ISortedList<T> CreateEmptyList<T>()
+        {
+            return new BTree<T>(AllowsDuplicates());
+        }
+
+        protected override bool AllowsDuplicates()
+        {
+            return false;
+        }
     }
     static class TestCollectionExtensions
     {

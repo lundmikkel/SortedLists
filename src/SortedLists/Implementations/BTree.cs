@@ -20,329 +20,34 @@
 //NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 //ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Diagnostics.Contracts;
-
 namespace TrentTobler.Collections
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Diagnostics;
+    using System.Diagnostics.Contracts;
+    using System.Linq;
+    using C5;
+    using SortedLists;
+    using SCG = System.Collections.Generic;
+
     /// <summary>
     /// A sorted collection (set) data structure using b-trees.
     /// </summary>
     /// <typeparam name="T">The type of items in the collection.</typeparam>
     [DebuggerDisplay("Count = {Count}")]
-    public class BTree<T> : ICollection<T>
+    public class BTree<T> : ISortedList<T>, System.Collections.Generic.ICollection<T>
+        where T : IComparable<T>
     {
         #region Fields
 
         private Node _root;
         private readonly Node _first;
-        private readonly IComparer<T> _comparer;
-        private bool _allowDuplicates;
-
-        [ContractInvariantMethod]
-        private void Invariants()
-        {
-            Contract.Invariant(_root != null);
-            Contract.Invariant(_first != null);
-            Contract.Invariant(_comparer != null);
-        }
+        private readonly bool _allowsDuplicates;
 
         #endregion
 
-        #region Construction
-
-        /// <summary>
-        /// Initializes a new BTree instance.
-        /// </summary>
-        /// <param name="nodeCapacity">The node capacity.</param>
-        public BTree(int nodeCapacity = 128)
-            : this(Comparer<T>.Default, nodeCapacity)
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new BTree instance with the specified comparer.
-        /// </summary>
-        /// <param name="comparer"></param>
-        /// <param name="nodeCapacity"></param>
-        public BTree(IComparer<T> comparer, int nodeCapacity = 128)
-        {
-            Contract.Requires(comparer != null);
-            Contract.Requires(nodeCapacity > 2);
-
-           _comparer = comparer;
-           _first = new Node(nodeCapacity);
-           _root = _first;
-        }
-
-        #endregion
-
-        #region Properties
-
-        /// <summary>
-        /// Gets the number of items in the collection.
-        /// </summary>
-        public int Count
-        {
-            get
-            {
-                Contract.Ensures(Contract.Result<int>() >= 0);
-
-                return _root.TotalCount;
-            }
-        }
-
-        /// <summary>
-        /// Gets the comparer used to order items in the collection.
-        /// </summary>
-        public IComparer<T> Comparer
-        {
-            get
-            {
-                Contract.Ensures(Contract.Result<IComparer<T>>() != null);
-        
-                return _comparer;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets indication whether this collection is readonly or mutable.
-        /// </summary>
-        public bool IsReadOnly
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// Gets or sets indication whether this collection allows duplicate values.
-        /// </summary>
-        public bool AllowDuplicates
-        {
-            get
-            {
-                return _allowDuplicates;
-            }
-            set
-            {
-                Contract.Requires(!IsReadOnly);
-                Contract.Requires(value || !AllowDuplicates || Count == 0);
-
-                _allowDuplicates = value;
-            }
-        }
-
-        #endregion
-
-        #region Methods
-
-        /// <summary>
-        /// Gets the item at the specified index. O(log N)
-        /// </summary>
-        /// <param name="index">The index for the item to retrieve.</param>
-        /// <returns>The value of the item at the specified index.</returns>
-        public T At(int index)
-        {
-            Contract.Requires(0 <= index && index < Count);
-
-            return Node.LeafAt(_root, ref index).GetKey(index);
-        }
-
-        /// <summary>
-        /// Gets a value indicating whether the specified value is in the collection. O(log N)
-        /// </summary>
-        /// <param name="value">The value.</param>
-        /// <returns>True if the collection contains at item with the value; Otherwise, false.</returns>
-        public bool Contains(T value)
-        {
-            Node leaf;
-            int pos;
-            return Node.Find(_root, value, _comparer, 0, out leaf, out pos);
-        }
-
-        void ICollection<T>.Add(T value)
-        {
-            Add(value);
-        }
-
-        /// <summary>
-        /// Adds the specified value to the collection. O(log N)
-        /// </summary>
-        /// <param name="value">The value to add.</param>
-        public bool Add(T value)
-        {
-            Contract.Requires(!IsReadOnly);
-
-            Node leaf;
-            int pos;
-            var found = Node.Find(_root, value, _comparer, 0, out leaf, out pos);
-            if (found && !AllowDuplicates)
-                return false;
-            Node.Insert(value, leaf, pos, ref _root);
-            return true;
-        }
-
-        /// <summary>
-        /// Clears the collection of all elements. O(1)
-        /// </summary>
-        public void Clear()
-        {
-            Contract.Requires(!IsReadOnly);
-
-            Node.Clear(_first);
-            _root = _first;
-        }
-
-        /// <summary>
-        /// Removes the specified key value from the collection. O(log N)
-        /// </summary>
-        /// <param name="value">The key value to remove.</param>
-        /// <returns>True if the value was added; otherwise, false.</returns>
-        public bool Remove(T value)
-        {
-            Contract.Requires(!IsReadOnly);
-
-            Node leaf;
-            int pos;
-            if (!Node.Find(_root, value, _comparer, 0, out leaf, out pos))
-                return false;
-
-            Node.Remove(leaf, pos, ref _root);
-            return true;
-        }
-
-        /// <summary>
-        /// Removes the item at the specified index. O(log N)
-        /// </summary>
-        /// <param name="index">The index from which to remove.</param>
-        public void RemoveAt(int index)
-        {
-            Contract.Requires(0 <= index && index < Count);
-            Contract.Requires(!IsReadOnly);
-
-            var leaf = Node.LeafAt(_root, ref index);
-            Node.Remove(leaf, index, ref _root);
-        }
-
-        /// <summary>
-        /// Gets an enumerator for the collection. O(1), move next: O(1)
-        /// </summary>
-        /// <returns>An enumerator for the collection.</returns>
-        public IEnumerator<T> GetEnumerator()
-        {
-            Contract.Ensures(Contract.Result<IEnumerator<T>>() != null);
-
-            return Node.ForwardFromIndex(_first, 0).GetEnumerator();
-        }
-
-        /// <summary>
-        /// Copies the collection into the specified array. O(N)
-        /// </summary>
-        /// <param name="array">The array into which to copy.</param>
-        /// <param name="arrayIndex">The index at which to start copying.</param>
-        public void CopyTo(T[] array, int arrayIndex)
-        {
-            Contract.Requires(array != null);
-            Contract.Requires(arrayIndex + Count <= array.Length);
-
-            foreach (var item in this)
-                array[arrayIndex++] = item;
-        }
-
-        /// <summary>
-        /// Gets the index of the first item greater than the specified value. O(log N), move next: O(1)
-        /// </summary>
-        /// <param name="value">The value for which to find the index.</param>
-        /// <returns>The index of the first item greater than the specified value, or Count if no such item exists.</returns>
-        public int FirstIndexWhereGreaterThan(T value)
-        {
-            Contract.Ensures(Contract.Result<int>() >= 0 && Contract.Result<int>() <= Count);
-
-            Node leaf;
-            int pos;
-            var found = Node.Find(_root, value, _comparer, AllowDuplicates ? 1 : 0, out leaf, out pos);
-            var result = Node.GetRootIndex(leaf, pos);
-            if (found)
-                ++result;
-            return result;
-        }
-
-        /// <summary>
-        /// Gets the index of the last item less than the specified key. O(log N), move next: O(1)
-        /// </summary>
-        /// <param name="value">The value for which to find the index.</param>
-        /// <returns>The index of the last item less than the specified value, or -1 if no such item exists.</returns>
-        public int LastIndexWhereLessThan(T value)
-        {
-            Contract.Ensures(Contract.Result<int>() >= -1 && Contract.Result<int>() < Count);
-
-            Node leaf;
-            int pos;
-            Node.Find(_root, value, _comparer, AllowDuplicates ? -1 : 0, out leaf, out pos);
-            return Node.GetRootIndex(leaf, pos) - 1;
-        }
-
-        /// <summary>
-        /// Get all items equal to or greater than the specified value, starting with the lowest index and moving forwards. O(log N), move next: O(1)
-        /// </summary>
-        /// <param name="value">The value.</param>
-        /// <returns>All items having values equal to or greater than the specified value.</returns>
-        public IEnumerable<T> WhereGreaterOrEqual(T value)
-        {
-            Contract.Ensures(Contract.Result<IEnumerable<T>>() != null);
-
-            Node leaf;
-            int pos;
-            Node.Find(_root, value, _comparer, AllowDuplicates ? -1 : 0, out leaf, out pos);
-            return Node.ForwardFromIndex(leaf, pos);
-        }
-
-        /// <summary>
-        /// Get all items less than or equal to the specified value, starting with the highest index and moving backwards. O(log N), move next: O(1)
-        /// </summary>
-        /// <param name="value">The key value.</param>
-        /// <returns>All items having values equal to or greater than the specified value.</returns>
-        public IEnumerable<T> WhereLessOrEqualBackwards(T value)
-        {
-            Contract.Ensures(Contract.Result<IEnumerable<T>>() != null);
-
-            Node leaf;
-            int pos;
-            var found = Node.Find(_root, value, _comparer, AllowDuplicates ? 1 : 0, out leaf, out pos);
-            if (!found)
-                --pos;
-            return Node.BackwardFromIndex(leaf, pos);
-        }
-
-        /// <summary>
-        /// Get all items starting at the index, and moving forward. O(log N), move next: O(1)
-        /// </summary>
-        public IEnumerable<T> ForwardFromIndex(int index)
-        {
-            Contract.Requires(0 <= index && index <= Count);
-            Contract.Ensures(Contract.Result<IEnumerable<T>>() != null);
-
-            var node = Node.LeafAt(_root, ref index);
-            return Node.ForwardFromIndex(node, index);
-        }
-
-        /// <summary>
-        /// Get all items starting at the index, and moving backward. O(log N), move next: O(1)
-        /// </summary>
-        public IEnumerable<T> BackwardFromIndex(int index)
-        {
-            Contract.Requires(0 <= index && index <= Count);
-            Contract.Ensures(Contract.Result<IEnumerable<T>>() != null);
-
-            var node = Node.LeafAt(_root, ref index);
-            return Node.BackwardFromIndex(node, index);
-        }
-
-        #endregion
-
-        #region Implementation - Nested Types
+        #region Inner Class
 
         [DebuggerDisplay("Count={NodeCount}/{TotalCount}, First={keys[0]}")]
         private sealed class Node
@@ -392,7 +97,7 @@ namespace TrentTobler.Collections
 
             #region Properties
 
-            private bool IsRoot
+            public bool IsRoot
             {
                 get
                 {
@@ -400,7 +105,7 @@ namespace TrentTobler.Collections
                 }
             }
 
-            private bool IsLeaf
+            public bool IsLeaf
             {
                 get
                 {
@@ -415,25 +120,25 @@ namespace TrentTobler.Collections
             /// <summary>
             /// Gets the key at the specified position.
             /// </summary>
-            public T GetKey(int pos)
+            public T GetKey(int index)
             {
-                Contract.Requires(0 <= pos && pos < NodeCount);
+                Contract.Requires(0 <= index && index < NodeCount);
 
-                return _keys[pos];
+                return _keys[index];
             }
 
             /// <summary>
             /// Get the leaf node at the specified index in the tree defined by the specified root.
             /// </summary>
-            public static Node LeafAt(Node root, ref int pos)
+            public static Node LeafAt(Node root, ref int index)
             {
                 Contract.Requires(root != null);
                 Contract.Requires(root.IsRoot);
-                Contract.Requires(0 <= pos && pos < root.TotalCount);
+                Contract.Requires(0 <= index && index < root.TotalCount);
 
                 Contract.Ensures(Contract.Result<Node>() != null);
                 Contract.Ensures(Contract.Result<Node>().IsLeaf);
-                Contract.Ensures(0 <= pos && pos < Contract.Result<Node>().NodeCount);
+                Contract.Ensures(0 <= index && index < Contract.Result<Node>().NodeCount);
 
                 int nodeIndex = 0;
                 while (true)
@@ -444,7 +149,7 @@ namespace TrentTobler.Collections
 
                     // Scan thru the nodes in the root, until the total count exceeds the index.
                     var node = root._nodes[nodeIndex];
-                    if (pos < node.TotalCount)
+                    if (index < node.TotalCount)
                     {
                         // Found the node.  Move down one level.
                         root = node;
@@ -454,7 +159,7 @@ namespace TrentTobler.Collections
                     {
                         // Move to the next node in the root, and adjust index to be
                         // relative to the first element in that node.
-                        pos -= node.TotalCount;
+                        index -= node.TotalCount;
                         ++nodeIndex;
                     }
                 }
@@ -463,45 +168,45 @@ namespace TrentTobler.Collections
             /// <summary>
             /// Find the node and index in the tree defined by the specified root.
             /// </summary>
-            public static bool Find(Node root, T key, IComparer<T> keyComparer, int duplicatesBias, out Node leaf, out int pos)
+            public static bool Find(Node root, T key, int duplicatesBias, out Node leaf, out int index)
             {
                 Contract.Requires(root != null);
                 Contract.Requires(root.IsRoot);
                 Contract.Ensures(Contract.ValueAtReturn<Node>(out leaf) != null);
-                Contract.Ensures(0 <= Contract.ValueAtReturn<int>(out pos) && Contract.ValueAtReturn<int>(out pos) <= leaf.NodeCount);
+                Contract.Ensures(0 <= Contract.ValueAtReturn<int>(out index) && Contract.ValueAtReturn<int>(out index) <= leaf.NodeCount);
 
-                pos = Array.BinarySearch(root._keys, 0, root.NodeCount, key, keyComparer);
+                index = Array.BinarySearch(root._keys, 0, root.NodeCount, key);
                 while (root._nodes != null)
                 {
-                    if (pos >= 0)
+                    if (index >= 0)
                     {
                         if (duplicatesBias != 0)
-                            MoveToDuplicatesBoundary(key, keyComparer, duplicatesBias, ref root, ref pos);
+                            MoveToDuplicatesBoundary(key, duplicatesBias, ref root, ref index);
 
                         // Found an exact match.  Move down one level.
-                        root = root._nodes[pos];
+                        root = root._nodes[index];
                     }
                     else
                     {
                         // No exact match.  Find greatest lower bound.
-                        pos = ~pos;
-                        if (pos > 0)
-                            --pos;
-                        root = root._nodes[pos];
+                        index = ~index;
+                        if (index > 0)
+                            --index;
+                        root = root._nodes[index];
                     }
                     Contract.Assume(root != null);
-                    pos = Array.BinarySearch(root._keys, 0, root.NodeCount, key, keyComparer);
+                    index = Array.BinarySearch(root._keys, 0, root.NodeCount, key);
                 }
 
                 leaf = root;
-                if (pos < 0)
+                if (index < 0)
                 {
-                    pos = ~pos;
+                    index = ~index;
                     return false;
                 }
 
                 if (duplicatesBias != 0)
-                    MoveToDuplicatesBoundary(key, keyComparer, duplicatesBias, ref leaf, ref pos);
+                    MoveToDuplicatesBoundary(key, duplicatesBias, ref leaf, ref index);
 
                 return true;
             }
@@ -509,22 +214,22 @@ namespace TrentTobler.Collections
             /// <summary>
             /// Insert a new key into the leaf node at the specified position.
             /// </summary>
-            public static void Insert(T key, Node leaf, int pos, ref Node root)
+            public static void Insert(T key, Node leaf, int index, ref Node root)
             {
                 // Make sure there is space for the new key.
-                if (EnsureSpace(leaf, ref root) && pos > leaf.NodeCount)
+                if (EnsureSpace(leaf, ref root) && index > leaf.NodeCount)
                 {
-                    pos -= leaf.NodeCount;
+                    index -= leaf.NodeCount;
                     leaf = leaf._next;
                 }
 
                 // Insert the key.
-                Array.Copy(leaf._keys, pos, leaf._keys, pos + 1, leaf.NodeCount - pos);
-                leaf._keys[pos] = key;
+                Array.Copy(leaf._keys, index, leaf._keys, index + 1, leaf.NodeCount - index);
+                leaf._keys[index] = key;
                 ++leaf.NodeCount;
 
                 // Make sure parent keys index into this node correctly.
-                EnsureParentKey(leaf, pos);
+                EnsureParentKey(leaf, index);
 
                 // Update total counts.
                 for (var node = leaf; node != null; node = node._parent)
@@ -534,10 +239,10 @@ namespace TrentTobler.Collections
             /// <summary>
             /// Remove the item from the node at the specified position.
             /// </summary>
-            public static void Remove(Node leaf, int pos, ref Node root)
+            public static void Remove(Node leaf, int index, ref Node root)
             {
                 Contract.Requires(leaf != null);
-                Contract.Requires(0 <= pos && pos < leaf.NodeCount);
+                Contract.Requires(0 <= index && index < leaf.NodeCount);
                 Contract.Requires(leaf.IsLeaf);
 
                 // Update total counts.
@@ -546,12 +251,12 @@ namespace TrentTobler.Collections
 
                 // Remove the key from the node.
                 --leaf.NodeCount;
-                Array.Copy(leaf._keys, pos + 1, leaf._keys, pos, leaf.NodeCount - pos);
+                Array.Copy(leaf._keys, index + 1, leaf._keys, index, leaf.NodeCount - index);
                 leaf._keys[leaf.NodeCount] = default(T);
 
                 // Make sure parent keys index correctly into this node.
                 if (leaf.NodeCount > 0)
-                    EnsureParentKey(leaf, pos);
+                    EnsureParentKey(leaf, index);
 
                 // Merge this node with others if it is below the node capacity threshold.
                 Merge(leaf, ref root);
@@ -560,20 +265,20 @@ namespace TrentTobler.Collections
             /// <summary>
             /// Get all items starting at the index, and moving forward.
             /// </summary>
-            public static IEnumerable<T> ForwardFromIndex(Node leaf, int pos)
+            public static IEnumerable<T> EnumerateFromIndex(Node leaf, int index)
             {
                 Contract.Requires(leaf != null);
                 Contract.Requires(leaf.IsLeaf);
-                Contract.Requires(0 <= pos && pos <= leaf.NodeCount);
+                Contract.Requires(0 <= index && index <= leaf.NodeCount);
 
                 while (leaf != null)
                 {
-                    while (pos < leaf.NodeCount)
+                    while (index < leaf.NodeCount)
                     {
-                        yield return leaf.GetKey(pos);
-                        ++pos;
+                        yield return leaf.GetKey(index);
+                        ++index;
                     }
-                    pos -= leaf.NodeCount;
+                    index -= leaf.NodeCount;
                     leaf = leaf._next;
                 }
             }
@@ -581,44 +286,41 @@ namespace TrentTobler.Collections
             /// <summary>
             /// Get all items starting at the index, and moving backward.
             /// </summary>
-            public static IEnumerable<T> BackwardFromIndex(Node leaf, int pos)
+            public static IEnumerable<T> EnumerateBackwardsFromIndex(Node leaf, int index)
             {
                 Contract.Requires(leaf != null);
                 Contract.Requires(leaf.IsLeaf);
-                Contract.Requires(-1 <= pos && pos <= leaf.NodeCount);
+                Contract.Requires(-1 <= index && index <= leaf.NodeCount);
 
-                if (pos == -1)
+                if (index == -1)
                 {
                     // Handle special case to start moving in the previous node.
                     leaf = leaf._prev;
-                    if (leaf != null)
-                        pos = leaf.NodeCount - 1;
-                    else
-                        pos = 0;
+                    index = leaf != null ? leaf.NodeCount - 1 : 0;
                 }
-                else if (pos == leaf.NodeCount)
+                else if (index == leaf.NodeCount)
                 {
                     // Handle special case to start moving in the next node.
                     if (leaf._next == null)
-                        --pos;
+                        --index;
                     else
                     {
                         leaf = leaf._next;
-                        pos = 0;
+                        index = 0;
                     }
                 }
 
                 // Loop thru collection, yielding each value in sequence.
                 while (leaf != null)
                 {
-                    while (pos >= 0)
+                    while (index >= 0)
                     {
-                        yield return leaf.GetKey(pos);
-                        --pos;
+                        yield return leaf.GetKey(index);
+                        --index;
                     }
                     leaf = leaf._prev;
                     if (leaf != null)
-                        pos += leaf.NodeCount;
+                        index += leaf.NodeCount;
                 }
             }
 
@@ -640,14 +342,14 @@ namespace TrentTobler.Collections
             /// <summary>
             /// Get the index relative to the root node, for the position in the specified leaf.
             /// </summary>
-            public static int GetRootIndex(Node leaf, int pos)
+            public static int GetRootIndex(Node leaf, int index)
             {
                 var node = leaf;
-                var rootIndex = pos;
+                var rootIndex = index;
                 while (node._parent != null)
                 {
-                    int nodePos = Array.IndexOf(node._parent._nodes, node, 0, node._parent.NodeCount);
-                    for (int i = 0; i < nodePos; ++i)
+                    var nodeIndex = Array.IndexOf(node._parent._nodes, node, 0, node._parent.NodeCount);
+                    for (var i = 0; i < nodeIndex; ++i)
                         rootIndex += node._parent._nodes[i].TotalCount;
                     node = node._parent;
                 }
@@ -659,15 +361,14 @@ namespace TrentTobler.Collections
             #region Implementation
 
             /// <summary>
-            /// (Assumes: key is a duplicate in node at pos) Move to the side on the range of duplicates,
+            /// (Assumes: key is a duplicate in node at index) Move to the side on the range of duplicates,
             /// as indicated by the sign of duplicatesBias.
             /// </summary>
             /// <param name="key"></param>
-            /// <param name="keyComparer"></param>
             /// <param name="duplicatesBias"></param>
             /// <param name="node"></param>
-            /// <param name="pos"></param>
-            static void MoveToDuplicatesBoundary(T key, IComparer<T> keyComparer, int duplicatesBias, ref Node node, ref int pos)
+            /// <param name="index"></param>
+            static void MoveToDuplicatesBoundary(T key, int duplicatesBias, ref Node node, ref int index)
             {
                 // Technically, we could adjust the binary search to perform most of this step, but duplicates
                 // are usually unexpected.. algorithm is still O(log N), because scan include at most a scan thru two nodes
@@ -678,31 +379,31 @@ namespace TrentTobler.Collections
                 if (duplicatesBias < 0)
                 {
                     // Move backward over duplicates.
-                    while (pos > 0 && 0 == keyComparer.Compare(node._keys[pos - 1], key))
-                        --pos;
+                    while (index > 0 && node._keys[index - 1].CompareTo(key) == 0)
+                        --index;
 
                     // Special case: duplicates can span backwards into the previous node because the parent
                     // key pivot might be in the center for the duplicates.
-                    if (pos == 0 && node._prev != null)
+                    if (index == 0 && node._prev != null)
                     {
                         var prev = node._prev;
-                        var prevPos = prev.NodeCount;
-                        while (prevPos > 0 && 0 == keyComparer.Compare(prev._keys[prevPos - 1], key))
+                        var prevIndex = prev.NodeCount;
+                        while (prevIndex > 0 && prev._keys[prevIndex - 1].CompareTo(key) == 0)
                         {
-                            --prevPos;
+                            --prevIndex;
                         }
-                        if (prevPos < prev.NodeCount)
+                        if (prevIndex < prev.NodeCount)
                         {
                             node = prev;
-                            pos = prevPos;
+                            index = prevIndex;
                         }
                     }
                 }
                 else
                 {
                     // Move forward over duplicates.
-                    while (pos < node.NodeCount - 1 && 0 == keyComparer.Compare(node._keys[pos + 1], key))
-                        ++pos;
+                    while (index < node.NodeCount - 1 && node._keys[index + 1].CompareTo(key) == 0)
+                        ++index;
                 }
             }
 
@@ -723,16 +424,16 @@ namespace TrentTobler.Collections
                     node._next._prev = sibling;
                 node._next = sibling;
 
-                int pos = Array.IndexOf(node._parent._nodes, node, 0, node._parent.NodeCount);
-                int siblingPos = pos + 1;
+                var index = Array.IndexOf(node._parent._nodes, node, 0, node._parent.NodeCount);
+                var siblingIndex = index + 1;
 
-                Array.Copy(node._parent._keys, siblingPos, node._parent._keys, siblingPos + 1, node._parent.NodeCount - siblingPos);
-                Array.Copy(node._parent._nodes, siblingPos, node._parent._nodes, siblingPos + 1, node._parent.NodeCount - siblingPos);
+                Array.Copy(node._parent._keys, siblingIndex, node._parent._keys, siblingIndex + 1, node._parent.NodeCount - siblingIndex);
+                Array.Copy(node._parent._nodes, siblingIndex, node._parent._nodes, siblingIndex + 1, node._parent.NodeCount - siblingIndex);
                 ++node._parent.NodeCount;
-                node._parent._nodes[siblingPos] = sibling;
+                node._parent._nodes[siblingIndex] = sibling;
 
-                int half = node.NodeCount / 2;
-                int halfCount = node.NodeCount - half;
+                var half = node.NodeCount / 2;
+                var halfCount = node.NodeCount - half;
                 Move(node, half, sibling, 0, halfCount);
                 return true;
             }
@@ -798,12 +499,12 @@ namespace TrentTobler.Collections
                 root = parent;
             }
 
-            static void EnsureParentKey(Node node, int pos)
+            static void EnsureParentKey(Node node, int index)
             {
-                while (pos == 0 && node._parent != null)
+                while (index == 0 && node._parent != null)
                 {
-                    pos = Array.IndexOf(node._parent._nodes, node, 0, node._parent.NodeCount);
-                    node._parent._keys[pos] = node._keys[0];
+                    index = Array.IndexOf(node._parent._nodes, node, 0, node._parent.NodeCount);
+                    node._parent._keys[index] = node._keys[0];
                     node = node._parent;
                 }
             }
@@ -817,16 +518,16 @@ namespace TrentTobler.Collections
                         return;
 
                     // Remove the node from the parent nodes.
-                    int pos = Array.IndexOf(node._parent._nodes, node, 0, node._parent.NodeCount);
+                    var index = Array.IndexOf(node._parent._nodes, node, 0, node._parent.NodeCount);
                     --node._parent.NodeCount;
-                    Array.Copy(node._parent._keys, pos + 1, node._parent._keys, pos, node._parent.NodeCount - pos);
-                    Array.Copy(node._parent._nodes, pos + 1, node._parent._nodes, pos, node._parent.NodeCount - pos);
+                    Array.Copy(node._parent._keys, index + 1, node._parent._keys, index, node._parent.NodeCount - index);
+                    Array.Copy(node._parent._nodes, index + 1, node._parent._nodes, index, node._parent.NodeCount - index);
                     node._parent._keys[node._parent.NodeCount] = default(T);
                     node._parent._nodes[node._parent.NodeCount] = null;
 
                     // Make sure parent (of the parent) keys link down correctly.
                     if (node._parent.NodeCount > 0)
-                        EnsureParentKey(node._parent, pos);
+                        EnsureParentKey(node._parent, index);
 
                     // Delete the node from the next/prev linked list.
                     node._prev._next = node._next;
@@ -865,13 +566,324 @@ namespace TrentTobler.Collections
 
         #endregion
 
-        #region IEnumerable members
+        #region Code Contracts
+
+        [ContractInvariantMethod]
+        private void Invariants()
+        {
+            Contract.Invariant(_root != null);
+            Contract.Invariant(_first != null);
+        }
+
+        #endregion
+
+        #region Construction
+        /// <summary>
+        /// Initializes a new BTree instance.
+        /// </summary>
+        /// <param name="allowsDuplicates"></param>
+        /// <param name="nodeCapacity"></param>
+        public BTree(bool allowsDuplicates = false, int nodeCapacity = 128)
+        {
+            Contract.Requires(nodeCapacity > 2);
+
+            _allowsDuplicates = allowsDuplicates;
+            _first = new Node(nodeCapacity);
+            _root = _first;
+        }
+
+        #endregion
+
+        #region ISortedList<T>
+
+        #region Properties
+
+        public int Count { get { return _root.TotalCount; } }
+
+        public bool IsEmpty { get { return _root.TotalCount == 0; } }
+
+        public bool AllowsDuplicates { get { return _allowsDuplicates; } }
+
+        public Speed IndexingSpeed { get { return Speed.Log; } }
+
+        public T this[int i]
+        {
+            get
+            {
+                return Node.LeafAt(_root, ref i).GetKey(i);
+            }
+        }
+
+        public T First
+        {
+            get
+            {
+                // TODO: Find a faster solution
+                return this[0];
+            }
+        }
+
+        public T Last
+        {
+            get
+            {
+                // TODO: Find a faster solution
+                return this[Count - 1];
+            }
+        }
+
+        #endregion
+
+        #region Enumerable
+
+        /// <summary>
+        /// Gets an enumerator for the collection. O(1), move next: O(1)
+        /// </summary>
+        /// <returns>An enumerator for the collection.</returns>
+        public IEnumerator<T> GetEnumerator()
+        {
+            Contract.Ensures(Contract.Result<IEnumerator<T>>() != null);
+
+            return Node.EnumerateFromIndex(_first, 0).GetEnumerator();
+        }
 
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
         }
 
+        IEnumerator<T> IEnumerable<T>.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        public IEnumerable<T> EnumerateFromIndex(int index)
+        {
+            Contract.Requires(0 <= index && index <= Count); // TODO: Why <= Count?
+
+            var node = Node.LeafAt(_root, ref index);
+            return Node.EnumerateFromIndex(node, index);
+        }
+
+        public IEnumerable<T> EnumerateRange(int inclusiveFrom, int exclusiveTo)
+        {
+            foreach (var item in EnumerateFromIndex(inclusiveFrom))
+            {
+                if (inclusiveFrom++ < exclusiveTo)
+                    yield return item;
+                else
+                    yield break;
+            }
+        }
+
+        public IEnumerable<T> EnumerateBackwards()
+        {
+            return IsEmpty ? Enumerable.Empty<T>() : EnumerateBackwardsFromIndex(Count - 1);
+        }
+
+        public IEnumerable<T> EnumerateBackwardsFromIndex(int index)
+        {
+            Contract.Requires(0 <= index && index <= Count);
+            Contract.Ensures(Contract.Result<IEnumerable<T>>() != null);
+
+            var node = Node.LeafAt(_root, ref index);
+            return Node.EnumerateBackwardsFromIndex(node, index);
+        }
+
+        #endregion
+
+        #region Find
+
+        public int IndexOf(T item)
+        {
+            Node leaf;
+            int index;
+            var found = Node.Find(_root, item, AllowsDuplicates ? -1 : 0, out leaf, out index);
+            var result = Node.GetRootIndex(leaf, index);
+            return found ? result : ~result;
+        }
+
+        public bool Contains(T item)
+        {
+            Node leaf;
+            int index;
+            return Node.Find(_root, item, 0, out leaf, out index);
+        }
+
+        #endregion
+
+        #region Extensible
+
+        public bool Add(T item)
+        {
+            Contract.Requires(!IsReadOnly);
+
+            Node leaf;
+            int index;
+            var found = Node.Find(_root, item, 0, out leaf, out index);
+            if (found && !AllowsDuplicates)
+                return false;
+            Node.Insert(item, leaf, index, ref _root);
+            return true;
+        }
+
+        public bool Remove(T item)
+        {
+            Contract.Requires(!IsReadOnly);
+
+            Node leaf;
+            int index;
+            if (!Node.Find(_root, item, 0, out leaf, out index))
+                return false;
+
+            Node.Remove(leaf, index, ref _root);
+            return true;
+        }
+
+        public void Clear()
+        {
+            Contract.Requires(!IsReadOnly);
+
+            Node.Clear(_first);
+            _root = _first;
+        }
+
+        #endregion
+
+        #endregion
+
+        #region ICollection<T>
+
+        /// <summary>
+        /// Gets a value indicating whether the specified value is in the collection. O(log N)
+        /// </summary>
+        /// <param name="value">The value.</param>
+        /// <returns>True if the collection contains at item with the value; Otherwise, false.</returns>
+        bool SCG.ICollection<T>.Contains(T value)
+        {
+            return Contains(value);
+        }
+
+        void System.Collections.Generic.ICollection<T>.Add(T value)
+        {
+            Add(value);
+        }
+
+        /// <summary>
+        /// Removes the specified key value from the collection. O(log N)
+        /// </summary>
+        /// <param name="value">The key value to remove.</param>
+        /// <returns>True if the value was added; otherwise, false.</returns>
+        bool SCG.ICollection<T>.Remove(T value)
+        {
+            return Remove(value);
+        }
+
+        #endregion
+
+        #region Properties
+        int System.Collections.Generic.ICollection<T>.Count { get { return _root.TotalCount; } }
+
+        /// <summary>
+        /// Gets or sets indication whether this collection is readonly or mutable.
+        /// </summary>
+        public bool IsReadOnly { get; set; }
+
+
+        #endregion
+
+        #region Methods
+
+        /// <summary>
+        /// Removes the item at the specified index. O(log N)
+        /// </summary>
+        /// <param name="index">The index from which to remove.</param>
+        public void RemoveAt(int index)
+        {
+            Contract.Requires(0 <= index && index < Count);
+            Contract.Requires(!IsReadOnly);
+
+            var leaf = Node.LeafAt(_root, ref index);
+            Node.Remove(leaf, index, ref _root);
+        }
+
+        /// <summary>
+        /// Copies the collection into the specified array. O(N)
+        /// </summary>
+        /// <param name="array">The array into which to copy.</param>
+        /// <param name="arrayIndex">The index at which to start copying.</param>
+        public void CopyTo(T[] array, int arrayIndex)
+        {
+            Contract.Requires(array != null);
+            Contract.Requires(arrayIndex + Count <= array.Length);
+
+            foreach (var item in this)
+                array[arrayIndex++] = item;
+        }
+
+        /// <summary>
+        /// Gets the index of the first item greater than the specified value. O(log N), move next: O(1)
+        /// </summary>
+        /// <param name="value">The value for which to find the index.</param>
+        /// <returns>The index of the first item greater than the specified value, or Count if no such item exists.</returns>
+        public int IndexOfFirstGreaterThan(T value)
+        {
+            Contract.Ensures(Contract.Result<int>() >= 0 && Contract.Result<int>() <= Count);
+
+            Node leaf;
+            int index;
+            var found = Node.Find(_root, value, AllowsDuplicates ? 1 : 0, out leaf, out index);
+            var result = Node.GetRootIndex(leaf, index);
+            return found ? result + 1 : result;
+        }
+
+        /// <summary>
+        /// Gets the index of the last item less than the specified key. O(log N), move next: O(1)
+        /// </summary>
+        /// <param name="value">The value for which to find the index.</param>
+        /// <returns>The index of the last item less than the specified value, or -1 if no such item exists.</returns>
+        public int IndexOfLastLessThan(T value)
+        {
+            Contract.Ensures(Contract.Result<int>() >= -1 && Contract.Result<int>() < Count);
+
+            Node leaf;
+            int index;
+            Node.Find(_root, value, AllowsDuplicates ? -1 : 0, out leaf, out index);
+            return Node.GetRootIndex(leaf, index) - 1;
+        }
+
+        /// <summary>
+        /// Get all items equal to or greater than the specified value, starting with the lowest index and moving forwards. O(log N), move next: O(1)
+        /// </summary>
+        /// <param name="value">The value.</param>
+        /// <returns>All items having values equal to or greater than the specified value.</returns>
+        public IEnumerable<T> EnumerateFrom(T value)
+        {
+            Contract.Ensures(Contract.Result<IEnumerable<T>>() != null);
+
+            Node leaf;
+            int index;
+            Node.Find(_root, value, AllowsDuplicates ? -1 : 0, out leaf, out index);
+            return Node.EnumerateFromIndex(leaf, index);
+        }
+
+        /// <summary>
+        /// Get all items less than or equal to the specified value, starting with the highest index and moving backwards. O(log N), move next: O(1)
+        /// </summary>
+        /// <param name="value">The key value.</param>
+        /// <returns>All items having values equal to or greater than the specified value.</returns>
+        public IEnumerable<T> EnumerateBackwardsFrom(T value)
+        {
+            Contract.Ensures(Contract.Result<IEnumerable<T>>() != null);
+
+            Node leaf;
+            int index;
+            var found = Node.Find(_root, value, AllowsDuplicates ? 1 : 0, out leaf, out index);
+            if (!found)
+                --index;
+            return Node.EnumerateBackwardsFromIndex(leaf, index);
+        }
+        
         #endregion
     }
 }
