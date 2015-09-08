@@ -92,7 +92,6 @@
     <Compile Include="Factories\SortedListPerformanceTestFactory.cs" />
     <Compile Include="Infrastructure\Entities\SortedListPerformanceTestCaseConfiguration.cs" />
     <Compile Include="InterfaceTests\SortedListPerformanceTest.cs" />
-    <Compile Include="NUnitBenchmarker\NUnitBenchmarkerDemoTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
