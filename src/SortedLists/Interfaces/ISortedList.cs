@@ -7,6 +7,7 @@
     using System.Linq;
     using C5;
 
+    // TODO: Inherit from ICollection!
     [ContractClass(typeof(SortedListContract<>))]
     public interface ISortedList<T> : IEnumerable<T> where T : IComparable<T>
     {
