@@ -61,7 +61,7 @@
                    {
                        TestName = "RandomIntAdd",
                        TargetImplementationType = implementationType,
-                       Identifier = string.Format("{0}({1})", implementationType.GetFriendlyName()), //, parameters.FirstOrDefault()),
+                       Identifier = string.Format("{0}", implementationType.GetFriendlyName()), //, parameters.FirstOrDefault()),
                        Size = size,
                        Prepare = prepare,
                        Run = run,
