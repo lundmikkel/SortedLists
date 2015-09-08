@@ -4,6 +4,7 @@
     using System.Collections.Generic;
     using System.Collections;
     using System.Diagnostics;
+    using System.Diagnostics.Contracts;
 
     /// <summary>
     /// Represents a strongly typed collection of objects that can be accessed by index. Insertions and 
@@ -15,7 +16,7 @@
     public partial class GapBuffer<T> : IList<T>
     {
         #region Fields
-
+        
         private const int MinCapacity = 4;
 
         private T[] _buffer;
@@ -24,6 +25,23 @@
         private int _version;
         
         #endregion Fields
+
+
+        #region Code Contracts
+
+        [ContractInvariantMethod]
+        private void invariants()
+        {
+            // List is never shorter than MinCapacity
+            Contract.Invariant(_buffer.Length >= MinCapacity);
+
+            // Gap must never end before starting
+            Contract.Invariant(_gapStart <= _gapEnd);
+            // Gap must always contain default(T)
+            Contract.Invariant(Contract.ForAll(_gapStart, _gapEnd, i => Equals(_buffer[i], default(T))));
+        }
+
+        #endregion
 
 
         #region Constructors
@@ -55,17 +73,17 @@
         {
             get
             {
+                Contract.Ensures(Contract.Result<int>() >= 0);
+
                 return _buffer.Length;
             }
             set
             {
-                // Is there any work to do?
+                Contract.Requires(value >= Count);
+
+                // Check if buffer already has the correct length
                 if (value == _buffer.Length)
                     return;
-
-                // Look for naughty boys and girls
-                if (value < Count)
-                    throw new ArgumentOutOfRangeException();
 
                 if (value > 0)
                 {
@@ -73,7 +91,7 @@
                     var newBuffer = new T[value];
                     var newGapEnd = newBuffer.Length - (_buffer.Length - _gapEnd);
 
-                    // Copy the spans into the front and back of the new buffer
+                    // Copy the spans into the front and back of the new buffertun
                     Array.Copy(_buffer, 0, newBuffer, 0, _gapStart);
                     Array.Copy(_buffer, _gapEnd, newBuffer, newGapEnd, newBuffer.Length - newGapEnd);
                     _buffer = newBuffer;
@@ -123,8 +141,7 @@
         {
             get
             {
-                if (index < 0 || index >= Count)
-                    throw new ArgumentOutOfRangeException();
+                Contract.Requires(0 <= index && index < Count);
 
                 // Find the correct span and get the item
                 if (index >= _gapStart)
@@ -134,8 +151,7 @@
             }
             set
             {
-                if (index < 0 || index >= Count)
-                    throw new ArgumentOutOfRangeException();
+                Contract.Requires(0 <= index && index < Count);
 
                 // Find the correct span and set the item
                 if (index >= _gapStart)
@@ -237,18 +253,10 @@
         /// </exception>
         public void CopyTo(T[] array, int arrayIndex)
         {
-            if (array == null)
-                throw new ArgumentNullException("array");
-
-            if (arrayIndex < 0)
-                throw new ArgumentOutOfRangeException();
-
-            if (array.Rank != 1)
-                throw new ArgumentException();
-
-            if (arrayIndex >= array.Length || arrayIndex + Count > array.Length)
-                throw new ArgumentException();
-
+            Contract.Requires(array != null);
+            Contract.Requires(arrayIndex >= 0);
+            Contract.Requires(array.Rank == 1);
+            Contract.Requires(arrayIndex < array.Length && arrayIndex + Count <= array.Length);
 
             // Copy the spans into the destination array at the offset
             Array.Copy(_buffer, 0, array, arrayIndex, _gapStart);
@@ -320,8 +328,7 @@
         /// </exception>
         public void Insert(int index, T item)
         {
-            if (index < 0 || index > Count)
-                throw new ArgumentOutOfRangeException();
+            Contract.Requires(0 <= index && index <= Count);
 
             // Prepare the buffer
             PlaceGapStart(index);
@@ -349,12 +356,8 @@
         /// </exception>
         public void InsertRange(int index, IEnumerable<T> collection)
         {
-            if (collection == null)
-                throw new ArgumentNullException("collection");
-
-            if (index < 0 || index > Count)
-                throw new ArgumentOutOfRangeException();
-
+            Contract.Requires(collection != null);
+            Contract.Requires(0 <= index && index < Count);
 
             var col = collection as ICollection<T>;
             if (col != null)
@@ -373,14 +376,8 @@
             else
             {
                 // Add the items to the buffer one-at-a-time :(
-                using (var enumerator = collection.GetEnumerator())
-                {
-                    while (enumerator.MoveNext())
-                    {
-                        Insert(index, enumerator.Current);
-                        index++;
-                    }
-                }
+                foreach (var item in collection)
+                    Insert(index++, item);
             }
 
             _version++;
@@ -399,6 +396,7 @@
         {
             // Get the index of the item
             var index = IndexOf(item);
+
             if (index < 0)
                 return false;
 
@@ -419,8 +417,7 @@
         /// </exception>
         public void RemoveAt(int index)
         {
-            if (index < 0 || index >= Count)
-                throw new ArgumentOutOfRangeException();
+            Contract.Requires(0 <= index && index < Count);
 
             // Place the gap at the index and increase the gap size by 1
             PlaceGapStart(index);
@@ -445,18 +442,11 @@
         /// </exception>
         public void RemoveRange(int index, int count)
         {
-            var size = Count;
-
-            if (index < 0 || index >= size)
-                throw new ArgumentOutOfRangeException();
-
-            if (count < 0 || size - index < count)
-                throw new ArgumentOutOfRangeException();
-
-
+            Contract.Requires(0 <= index && index < Count);
+            Contract.Requires(0 <= count && count <= Count - index);
+            
             // Move the gap over the index and increase the gap size
             // by the number of elements removed. Easy as pie!
-
             if (count > 0)
             {
                 PlaceGapStart(index);
@@ -476,9 +466,7 @@
             var size = Count;
             var threshold = (int) (_buffer.Length * 0.9);
             if (size < threshold)
-            {
                 Capacity = size;
-            }
         }
 
 
