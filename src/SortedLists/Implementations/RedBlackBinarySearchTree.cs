@@ -37,27 +37,27 @@
             */
         }
 
-        // is the tree rooted at x a BST with all keys strictly between min and max
+        // is the tree rooted at root a BST with all keys strictly between min and max
         // (if min or max is null, treat as empty constraint)
         // Credit: Bob Dondero's elegant solution
-        private bool isBST(Node x, Func<T> min, Func<T> max)
+        private bool isBST(Node root, Func<T> min, Func<T> max)
         {
-            if (x == null)
+            if (root == null)
                 return true;
-            if (min != null && x.Key.CompareTo(min()) <= 0)
+            if (min != null && root.Key.CompareTo(min()) <= 0)
                 return false;
-            if (max != null && x.Key.CompareTo(max()) >= 0)
+            if (max != null && root.Key.CompareTo(max()) >= 0)
                 return false;
-            return isBST(x.Left, min, () => x.Key) && isBST(x.Right, () => x.Key, max);
+            return isBST(root.Left, min, () => root.Key) && isBST(root.Right, () => root.Key, max);
         }
 
-        private bool isSizeConsistent(Node x)
+        private bool isSizeConsistent(Node root)
         {
-            if (x == null)
+            if (root == null)
                 return true;
-            if (x.Count != count(x.Left) + count(x.Right) + 1)
+            if (root.Count != count(root.Left) + count(root.Right) + 1)
                 return false;
-            return isSizeConsistent(x.Left) && isSizeConsistent(x.Right);
+            return isSizeConsistent(root.Left) && isSizeConsistent(root.Right);
         }
 
         private bool isRankConsistent() {
@@ -72,35 +72,35 @@
             return true;
         }
 
-        private bool is23(Node x)
+        private bool is23(Node root)
         {
-            if (x == null)
+            if (root == null)
                 return true;
-            if (isRed(x.Right))
+            if (isRed(root.Right))
                 return false;
-            if (x != _root && isRed(x) && isRed(x.Left))
+            if (root != _root && isRed(root) && isRed(root.Left))
                 return false;
-            return is23(x.Left) && is23(x.Right);
+            return is23(root.Left) && is23(root.Right);
         }
 
         private bool isBalanced()
         {
             var black = 0;     // number of black links on path from root to min
-            var x = _root;
-            while (x != null)
+            var node = _root;
+            while (node != null)
             {
-                if (!isRed(x)) black++;
-                x = x.Left;
+                if (!isRed(node)) black++;
+                node = node.Left;
             }
             return isBalanced(_root, black);
         }
 
         // does every path from the root to a leaf have the given number of black links?
-        private bool isBalanced(Node x, int black)
+        private bool isBalanced(Node root, int black)
         {
-            if (x == null) return black == 0;
-            if (!isRed(x)) black--;
-            return isBalanced(x.Left, black) && isBalanced(x.Right, black);
+            if (root == null) return black == 0;
+            if (!isRed(root)) black--;
+            return isBalanced(root.Left, black) && isBalanced(root.Right, black);
         }
 
         #endregion
@@ -164,119 +164,119 @@
         /// <summary>
         /// Makes a left-leaning link lean to the right.
         /// </summary>
-        /// <param name="h">The node.</param>
+        /// <param name="root">The node.</param>
         /// <returns>The new parent node.</returns>
-        private Node rotateRight(Node h)
+        private Node rotateRight(Node root)
         {
-            Contract.Requires(h != null);
-            Contract.Requires(isRed(h.Left));
+            Contract.Requires(root != null);
+            Contract.Requires(isRed(root.Left));
 
             // Rotate
-            var x = h.Left;
-            h.Left = x.Right;
-            x.Right = h;
+            var node = root.Left;
+            root.Left = node.Right;
+            node.Right = root;
 
             // Fix colors
-            x.Color = x.Right.Color;
-            x.Right.Color = Red;
+            node.Color = node.Right.Color;
+            node.Right.Color = Red;
 
             // Fix count
-            x.Count = h.Count;
-            h.Count = count(h.Left) + count(h.Right) + 1;
+            node.Count = root.Count;
+            root.Count = count(root.Left) + count(root.Right) + 1;
 
-            return x;
+            return node;
         }
 
         /// <summary>
         /// Makes a right-leaning link lean to the left.
         /// </summary>
-        /// <param name="h">The node.</param>
+        /// <param name="root">The node.</param>
         /// <returns>The new parent node.</returns>
-        private Node rotateLeft(Node h)
+        private Node rotateLeft(Node root)
         {
-            Contract.Requires(h != null);
-            Contract.Requires(isRed(h.Right));
+            Contract.Requires(root != null);
+            Contract.Requires(isRed(root.Right));
 
             // Rotate
-            var x = h.Right;
-            h.Right = x.Left;
-            x.Left = h;
+            var node = root.Right;
+            root.Right = node.Left;
+            node.Left = root;
 
             // Fix colors
-            x.Color = x.Left.Color;
-            x.Left.Color = Red;
+            node.Color = node.Left.Color;
+            node.Left.Color = Red;
 
             // Fix count
-            x.Count = h.Count;
-            h.Count = count(h.Left) + count(h.Right) + 1;
+            node.Count = root.Count;
+            root.Count = count(root.Left) + count(root.Right) + 1;
 
-            return x;
+            return node;
         }
 
         /// <summary>
         /// Flip the colors of a node and its two children
         /// </summary>
-        /// <param name="h">The node.</param>
-        private void flipColors(Node h)
+        /// <param name="root">The node.</param>
+        private void flipColors(Node root)
         {
-            Contract.Requires(h != null);
-            Contract.Requires(h.Left != null);
-            Contract.Requires(h.Right != null);
+            Contract.Requires(root != null);
+            Contract.Requires(root.Left != null);
+            Contract.Requires(root.Right != null);
             // Node must have opposite color of its two children
-            Contract.Requires(!isRed(h) && isRed(h.Left) && isRed(h.Right) || (isRed(h) && !isRed(h.Left) && !isRed(h.Right)));
+            Contract.Requires(!isRed(root) && isRed(root.Left) && isRed(root.Right) || (isRed(root) && !isRed(root.Left) && !isRed(root.Right)));
 
-            h.Color = !h.Color;
-            h.Left.Color = !h.Left.Color;
-            h.Right.Color = !h.Right.Color;
+            root.Color = !root.Color;
+            root.Left.Color = !root.Left.Color;
+            root.Right.Color = !root.Right.Color;
         }
 
-        // Assuming that h is red and both h.Left and h.Left.Left
-        // are black, make h.Left or one of its children red.
-        private Node moveRedLeft(Node h)
+        // Assuming that root is red and both root.Left and root.Left.Left
+        // are black, make root.Left or one of its children red.
+        private Node moveRedLeft(Node root)
         {
-            Contract.Requires(h != null);
-            Contract.Requires(isRed(h) && !isRed(h.Left) && !isRed(h.Left.Left));
+            Contract.Requires(root != null);
+            Contract.Requires(isRed(root) && !isRed(root.Left) && !isRed(root.Left.Left));
 
-            flipColors(h);
-            if (isRed(h.Right.Left))
+            flipColors(root);
+            if (isRed(root.Right.Left))
             {
-                h.Right = rotateRight(h.Right);
-                h = rotateLeft(h);
-                flipColors(h);
+                root.Right = rotateRight(root.Right);
+                root = rotateLeft(root);
+                flipColors(root);
             }
-            return h;
+            return root;
         }
 
-        // Assuming that h is red and both h.Right and h.Right.Left
-        // are black, make h.Right or one of its children red.
-        private Node moveRedRight(Node h)
+        // Assuming that root is red and both root.Right and root.Right.Left
+        // are black, make root.Right or one of its children red.
+        private Node moveRedRight(Node root)
         {
-            Contract.Requires(h != null);
-            Contract.Requires(isRed(h) && !isRed(h.Right) && !isRed(h.Right.Left));
-            flipColors(h);
-            if (isRed(h.Left.Left))
+            Contract.Requires(root != null);
+            Contract.Requires(isRed(root) && !isRed(root.Right) && !isRed(root.Right.Left));
+            flipColors(root);
+            if (isRed(root.Left.Left))
             {
-                h = rotateRight(h);
-                flipColors(h);
+                root = rotateRight(root);
+                flipColors(root);
             }
-            return h;
+            return root;
         }
 
         /// <summary>
         /// Restores red-black tree invariant for a node.
         /// </summary>
-        /// <param name="h">The node.</param>
+        /// <param name="root">The node.</param>
         /// <returns>The potentially new node.</returns>
-        private Node balance(Node h)
+        private Node balance(Node root)
         {
-            Contract.Requires(h != null);
+            Contract.Requires(root != null);
 
-            if (isRed(h.Right)) h = rotateLeft(h);
-            if (isRed(h.Left) && isRed(h.Left.Left)) h = rotateRight(h);
-            if (isRed(h.Left) && isRed(h.Right)) flipColors(h);
+            if (isRed(root.Right)) root = rotateLeft(root);
+            if (isRed(root.Left) && isRed(root.Left.Left)) root = rotateRight(root);
+            if (isRed(root.Left) && isRed(root.Right)) flipColors(root);
 
-            h.Count = count(h.Left) + count(h.Right) + 1;
-            return h;
+            root.Count = count(root.Left) + count(root.Right) + 1;
+            return root;
         }
 
         #endregion
@@ -364,7 +364,7 @@
         {
             var itemWasAdded = false;
 
-            _root = add(_root, item, ref itemWasAdded);
+            _root = add(item, _root, ref itemWasAdded);
             _root.Color = Black;
 
             return itemWasAdded;
@@ -552,7 +552,7 @@
             return false;
         }
 
-        private Node add(Node node, T key, ref bool itemWasAdded)
+        private Node add(T key, Node node, ref bool itemWasAdded)
         {
             if (node == null)
             {
@@ -563,13 +563,11 @@
             var compareTo = key.CompareTo(node.Key);
 
             if (compareTo < 0)
-                node.Left = add(node.Left, key, ref itemWasAdded);
+                node.Left = add(key, node.Left, ref itemWasAdded);
             else if (compareTo > 0)
-                node.Right = add(node.Right, key, ref itemWasAdded);
+                node.Right = add(key, node.Right, ref itemWasAdded);
             else
-            {
                 return node;
-            }
 
             // Fix-up any right-leaning links
             if (isRed(node.Right) && !isRed(node.Left))
@@ -579,58 +577,59 @@
             if (isRed(node.Left) && isRed(node.Right))
                 flipColors(node);
 
-            node.Count = count(node.Left) + count(node.Right) + 1;
+            if (itemWasAdded)
+                ++node.Count;
 
             return node;
         }
 
-        private Node remove(Node h, T item, ref bool itemWasRemoved)
+        private Node remove(Node root, T item, ref bool itemWasRemoved)
         {
-            if (item.CompareTo(h.Key) < 0)
+            if (item.CompareTo(root.Key) < 0)
             {
-                if (!isRed(h.Left) && !isRed(h.Left.Left))
-                    h = moveRedLeft(h);
+                if (!isRed(root.Left) && !isRed(root.Left.Left))
+                    root = moveRedLeft(root);
 
-                h.Left = remove(h.Left, item, ref itemWasRemoved);
+                root.Left = remove(root.Left, item, ref itemWasRemoved);
             }
             else
             {
-                if (isRed(h.Left))
-                    h = rotateRight(h);
+                if (isRed(root.Left))
+                    root = rotateRight(root);
 
-                if (item.CompareTo(h.Key) == 0 && (h.Right == null))
+                if (item.CompareTo(root.Key) == 0 && (root.Right == null))
                 {
                     itemWasRemoved = true;
                     return null;
                 }
 
-                if (!isRed(h.Right) && !isRed(h.Right.Left))
-                    h = moveRedRight(h);
+                if (!isRed(root.Right) && !isRed(root.Right.Left))
+                    root = moveRedRight(root);
 
-                if (item.CompareTo(h.Key) == 0)
+                if (item.CompareTo(root.Key) == 0)
                 {
                     itemWasRemoved = true;
-                    var x = min(h.Right);
-                    h.Key = x.Key;
-                    h.Right = deleteMin(h.Right); 
+                    var node = min(root.Right);
+                    root.Key = node.Key;
+                    root.Right = deleteMin(root.Right); 
                 }
                 else
-                    h.Right = remove(h.Right, item, ref itemWasRemoved);
+                    root.Right = remove(root.Right, item, ref itemWasRemoved);
             }
-            return balance(h);
+            return itemWasRemoved ? balance(root) : root;
         }
 
-        // delete the key-value pair with the minimum key rooted at h
-        private Node deleteMin(Node h)
+        // delete the key-value pair with the minimum key rooted at root
+        private Node deleteMin(Node root)
         {
-            if (h.Left == null)
+            if (root.Left == null)
                 return null;
 
-            if (!isRed(h.Left) && !isRed(h.Left.Left))
-                h = moveRedLeft(h);
+            if (!isRed(root.Left) && !isRed(root.Left.Left))
+                root = moveRedLeft(root);
 
-            h.Left = deleteMin(h.Left);
-            return balance(h);
+            root.Left = deleteMin(root.Left);
+            return balance(root);
         }
 
         #endregion
