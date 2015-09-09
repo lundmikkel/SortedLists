@@ -64,7 +64,8 @@
             return isSizeConsistent(root.Left) && isSizeConsistent(root.Right);
         }
 
-        private bool isRankConsistent() {
+        private bool isRankConsistent()
+        {
             for (var i = 0; i < Count; ++i)
                 if (i != IndexOf(this[i]))
                     return false;
@@ -161,14 +162,12 @@
 
                 var next = previous.Next;
 
-                previous.Next = this;
+                previous.Next = next.Previous = this;
                 Previous = previous;
-
                 Next = next;
-                next.Previous = this;
             }
 
-            public void Remove()
+            public void RemoveLinks()
             {
                 Previous.Next = Next;
                 Next.Previous = Previous;
@@ -360,7 +359,7 @@
             Contract.Ensures(_sentinel != null);
             Contract.Ensures(_sentinel.Next == _sentinel);
             Contract.Ensures(_sentinel.Previous == _sentinel);
-            
+
             _sentinel = new Node();
             _sentinel.Next = _sentinel.Previous = _sentinel;
         }
@@ -566,7 +565,7 @@
 
             return index;
         }
-        
+
         private Node add(T key, Node root, Node previous, ref bool itemWasAdded)
         {
             if (root == null)
@@ -592,7 +591,8 @@
             if (isRed(root.Left) && isRed(root.Right))
                 flipColors(root);
 
-            root.Count = count(root.Left) + count(root.Right) + 1;
+            if (itemWasAdded)
+                ++root.Count;
 
             return root;
         }
@@ -614,7 +614,7 @@
                 if (item.CompareTo(root.Key) == 0 && (root.Right == null))
                 {
                     itemWasRemoved = true;
-                    root.Remove();
+                    root.RemoveLinks();
                     return null;
                 }
 
@@ -639,7 +639,7 @@
         {
             if (root.Left == null)
             {
-                root.Remove();
+                root.RemoveLinks();
                 return null;
             }
 
