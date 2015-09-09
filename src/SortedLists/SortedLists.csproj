@@ -151,6 +151,7 @@
     <Compile Include="Implementations\SortedArray.cs" />
     <Compile Include="Implementations\SortedGapBuffer.cs" />
     <Compile Include="Implementations\SortedArrayList.cs" />
+    <Compile Include="Implementations\SortedSplitGapBuffer.cs" />
     <Compile Include="Implementations\SortedSplitList.cs" />
     <Compile Include="Implementations\SortedList.cs" />
     <Compile Include="Interfaces\ISortedList.cs" />

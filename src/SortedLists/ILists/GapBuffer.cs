@@ -16,14 +16,14 @@
     public partial class GapBuffer<T> : IList<T>
     {
         #region Fields
-        
+
         private const int MinCapacity = 4;
 
         private T[] _buffer;
         private int _gapStart;
         private int _gapEnd;
         private int _version;
-        
+
         #endregion Fields
 
 
@@ -49,9 +49,9 @@
         /// <summary>
         /// Initializes a new instance of the <see cref="GapBuffer{T}"/> class. 
         /// </summary>
-        public GapBuffer()
+        public GapBuffer(int capacity = MinCapacity)
         {
-            _buffer = new T[MinCapacity];
+            _buffer = new T[Math.Max(capacity, MinCapacity)];
             _gapEnd = _buffer.Length;
         }
 
@@ -126,7 +126,7 @@
         // Explicit ICollection<T> implementation
         bool ICollection<T>.IsReadOnly { get { return false; } }
 
-        
+
         /// <summary>
         /// Gets or sets the element at the specified index. 
         /// </summary>
@@ -233,7 +233,7 @@
             return false;
         }
 
-        
+
         /// <summary>
         /// Copies the <see cref="GapBuffer{T}"/> to a compatible one-dimensional array, 
         /// starting at the specified index of the target array.
@@ -263,7 +263,7 @@
             Array.Copy(_buffer, _gapEnd, array, arrayIndex + _gapStart, _buffer.Length - _gapEnd);
         }
 
-        
+
         /// <summary>
         /// Returns an enumerator that iterates through the <see cref="GapBuffer{T}"/>.
         /// </summary>
@@ -313,7 +313,7 @@
 
             return index;
         }
-        
+
 
         /// <summary>
         /// Inserts an element into the <see cref="GapBuffer{T}"/> at the specified index. Consecutive operations
@@ -339,7 +339,7 @@
             _version++;
         }
 
-        
+
         /// <summary>
         /// Inserts the elements of a collection into the <see cref="GapBuffer{T}"/> at the specified index. 
         /// Consecutive operations at or near previous inserts are optimized.
@@ -357,7 +357,7 @@
         public void InsertRange(int index, IEnumerable<T> collection)
         {
             Contract.Requires(collection != null);
-            Contract.Requires(0 <= index && index < Count);
+            Contract.Requires(0 <= index && index <= Count);
 
             var col = collection as ICollection<T>;
             if (col != null)
@@ -378,6 +378,39 @@
                 // Add the items to the buffer one-at-a-time :(
                 foreach (var item in collection)
                     Insert(index++, item);
+            }
+
+            _version++;
+        }
+
+
+        public void InsertRange(int insertIndex, GapBuffer<T> that, int readIndex, int count)
+        {
+            //Contract.Requires(0 <= insertIndex && insertIndex < Count);
+            //Contract.Requires(that != null);
+            //Contract.Requires(0 <= readIndex && readIndex < that.Count);
+            //Contract.Requires(0 <= count && count <= that.Count - readIndex);
+
+            if (count > 0)
+            {
+                PlaceGapStart(insertIndex);
+                EnsureGapCapacity(count);
+
+                // Copy the collection directly into the buffer
+                if (that._gapStart >= readIndex)
+                {
+                    var beforeCount = that._gapStart - readIndex;
+                    Array.Copy(that._buffer, readIndex, this._buffer, this._gapStart, beforeCount);
+                    _gapStart += beforeCount;
+                    count -= beforeCount;
+                    readIndex += beforeCount;
+                }
+                readIndex += that.GapSize;
+                if (count > 0)
+                {
+                    Array.Copy(that._buffer, readIndex, this._buffer, this._gapStart, count);
+                    _gapStart += count;
+                }
             }
 
             _version++;
@@ -444,7 +477,7 @@
         {
             Contract.Requires(0 <= index && index < Count);
             Contract.Requires(0 <= count && count <= Count - index);
-            
+
             // Move the gap over the index and increase the gap size
             // by the number of elements removed. Easy as pie!
             if (count > 0)
