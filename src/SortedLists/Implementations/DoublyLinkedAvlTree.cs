@@ -199,8 +199,8 @@
                             root = rotateRight(root);
 
                             // root.Balance is either -1, 0, or +1
-                            root.Left.Balance = (sbyte) (root.Balance == +1 ? -1 : 0);
-                            root.Right.Balance = (sbyte) (root.Balance == -1 ? +1 : 0);
+                            root.Left.Balance = root.Balance == +1 ? -1 : 0;
+                            root.Right.Balance = root.Balance == -1 ? +1 : 0;
                             root.Balance = 0;
                             break;
                     }
@@ -223,8 +223,8 @@
                             root = rotateLeft(root);
 
                             // root.Balance is either -1, 0, or +1
-                            root.Left.Balance = (sbyte) (root.Balance == +1 ? -1 : 0);
-                            root.Right.Balance = (sbyte) (root.Balance == -1 ? +1 : 0);
+                            root.Left.Balance = root.Balance == +1 ? -1 : 0;
+                            root.Right.Balance = root.Balance == -1 ? +1 : 0;
                             root.Balance = 0;
                             break;
                     }
@@ -452,21 +452,21 @@
 
         public bool Add(T item)
         {
-            var intervalWasAdded = false;
+            var itemWasAdded = false;
             var rotationNeeded = false;
 
-            _root = add(item, _root, _first, ref rotationNeeded, ref intervalWasAdded);
+            _root = add(item, _root, _first, ref rotationNeeded, ref itemWasAdded);
 
-            return intervalWasAdded;
+            return itemWasAdded;
         }
 
         public bool Remove(T item)
         {
-            var intervalWasRemoved = false;
+            var itemWasRemoved = false;
             var rotationNeeded = false;
-            _root = remove(item, _root, ref intervalWasRemoved, ref rotationNeeded);
+            _root = remove(item, _root, ref itemWasRemoved, ref rotationNeeded);
 
-            return intervalWasRemoved;
+            return itemWasRemoved;
         }
 
         public void Clear()
@@ -580,12 +580,12 @@
             return false;
         }
 
-        private Node add(T item, Node root, Node previous, ref bool rotationNeeded, ref bool intervalWasAdded)
+        private Node add(T item, Node root, Node previous, ref bool rotationNeeded, ref bool itemWasAdded)
         {
             if (root == null)
             {
                 rotationNeeded = true;
-                intervalWasAdded = true;
+                itemWasAdded = true;
                 return new Node(item, previous);
             }
 
@@ -593,7 +593,7 @@
 
             if (compare < 0)
             {
-                root.Left = add(item, root.Left, root.Previous, ref rotationNeeded, ref intervalWasAdded);
+                root.Left = add(item, root.Left, root.Previous, ref rotationNeeded, ref itemWasAdded);
 
                 // Adjust node balance, if node was added
                 if (rotationNeeded)
@@ -601,7 +601,7 @@
             }
             else if (compare > 0)
             {
-                root.Right = add(item, root.Right, root, ref rotationNeeded, ref intervalWasAdded);
+                root.Right = add(item, root.Right, root, ref rotationNeeded, ref itemWasAdded);
 
                 // Adjust node balance, if node was added
                 if (rotationNeeded)
@@ -609,11 +609,11 @@
             }
             else
             {
-                // Interval was not added
+                // Item was not added
                 return root;
             }
 
-            if (intervalWasAdded)
+            if (itemWasAdded)
             {
                 ++root.Count;
 
@@ -625,7 +625,7 @@
             return root;
         }
 
-        private Node remove(T item, Node root, ref bool intervalWasRemoved, ref bool rotationNeeded)
+        private Node remove(T item, Node root, ref bool itemWasRemoved, ref bool rotationNeeded)
         {
             if (root == null)
                 return null;
@@ -634,14 +634,14 @@
 
             if (compare < 0)
             {
-                root.Left = remove(item, root.Left, ref intervalWasRemoved, ref rotationNeeded);
+                root.Left = remove(item, root.Left, ref itemWasRemoved, ref rotationNeeded);
 
                 if (rotationNeeded)
                     root.Balance++;
             }
             else if (compare > 0)
             {
-                root.Right = remove(item, root.Right, ref intervalWasRemoved, ref rotationNeeded);
+                root.Right = remove(item, root.Right, ref itemWasRemoved, ref rotationNeeded);
 
                 if (rotationNeeded)
                     root.Balance--;
@@ -654,7 +654,7 @@
                 root.Swap(successor);
 
                 // Remove the successor node
-                root.Right = remove(successor.Key, root.Right, ref intervalWasRemoved, ref rotationNeeded);
+                root.Right = remove(successor.Key, root.Right, ref itemWasRemoved, ref rotationNeeded);
 
                 if (rotationNeeded)
                     root.Balance--;
@@ -662,14 +662,14 @@
             else
             {
                 rotationNeeded = true;
-                intervalWasRemoved = true;
+                itemWasRemoved = true;
                 root.Remove();
 
                 // Return Left if not null, otherwise Right - one must be null
                 return root.Left ?? root.Right;
             }
 
-            if (intervalWasRemoved)
+            if (itemWasRemoved)
             {
                 --root.Count;
 

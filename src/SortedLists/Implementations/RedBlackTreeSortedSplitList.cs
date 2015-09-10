@@ -121,14 +121,14 @@
         private class Node
         {
             public List<T> List;
-            public Node Left, Right;
-            public Node Previous, Next;
+            public Node Left, Right, Previous, Next;
             public bool Color;
             public int Count;
 
             public Node() { }
 
-            public Node(T item, Node previous) : this(previous)
+            public Node(T item, Node previous)
+                : this(previous)
             {
                 List.Add(item);
                 ++Count;
@@ -444,13 +444,7 @@
 
         public Speed IndexingSpeed { get { return Speed.Log; } }
 
-        public T this[int i]
-        {
-            get
-            {
-                return indexer(ref i).List[i];
-            }
-        }
+        public T this[int i] { get { return indexer(ref i).List[i]; } }
 
         public T First { get { return _sentinel.Next.List[0]; } }
 
