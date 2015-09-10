@@ -269,6 +269,8 @@
 
                 // Create new list if we are on the last list
                 // or if the next list can not accommodate the second half of the list
+                // TODO: Move to the previous list if it can hold all the items - why only check the next list?
+                // TODO: It seems that moving it to the next lists, if it fits, hardly ever happens!
                 if (listIndex == _lists.Count - 1 || mid <= _lists[listIndex + 1].Count)
                 {
                     // Ensure room for the mid elements being moved to the list

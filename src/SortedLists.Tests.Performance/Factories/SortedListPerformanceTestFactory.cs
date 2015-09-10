@@ -24,6 +24,7 @@
                     //typeof (DoublyLinkedRedBlackBinarySearchTree<>),
                     typeof (BTree<>),
                     typeof (SortedSplitList<>),
+                    typeof (TreeSortedSplitList<>),
                     //typeof (SortedSplitGapBuffer<>),
                 };
             }
@@ -36,7 +37,7 @@
                 //return new[] { 1 << 5, 1 << 6, 1 << 7, 1 << 8, 1 << 9, 1 << 10, 1 << 11 };
                 //return new[] { 5 * 1, 100 * 1, 200 * 1, 400 * 1, 800 * 1, 1600 * 1 };
                 //return new[] { 5 * H, 100 * H, 200 * H, 400 * H, 800 * H, 1600 * H };
-                //return new[] { 5 * K, 100 * K, 200 * K, 400 * K, 800 * K, 1600 * K };
+                return new[] { 5 * K, 100 * K, 200 * K, 400 * K, 800 * K, 1600 * K };
                 return new[] { 5 * K, 100 * K, 200 * K, 400 * K, 800 * K, 1600 * K, 3200 * K, 6400 * K, 12800 * K };
             }
         }
