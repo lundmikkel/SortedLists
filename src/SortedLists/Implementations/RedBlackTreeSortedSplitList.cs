@@ -8,7 +8,7 @@
     using C5;
     using SCG = System.Collections.Generic;
 
-    public class TreeSortedSplitList<T> : ISortedList<T> where T : IComparable<T>
+    public class RedBlackTreeSortedSplitList<T> : ISortedList<T> where T : IComparable<T>
     {
         #region Fields
 
@@ -413,7 +413,7 @@
 
         #region Constructor
 
-        public TreeSortedSplitList(int deepness = 512)
+        public RedBlackTreeSortedSplitList(int deepness = 512)
         {
             Contract.Ensures(_sentinel != null);
             Contract.Ensures(_root != null);

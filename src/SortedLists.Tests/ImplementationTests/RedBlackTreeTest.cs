@@ -1,10 +1,10 @@
 ﻿namespace SortedLists
 {
-    public class TreeSortedSplitListTest : SortedListTestBase
+    class RedBlackTreeTest : SortedListTestBase
     {
         protected override ISortedList<T> CreateEmptyList<T>()
         {
-            return new TreeSortedSplitList<T>(8);
+            return new RedBlackTree<T>();
         }
 
         protected override bool AllowsDuplicates()

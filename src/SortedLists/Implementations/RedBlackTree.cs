@@ -4,10 +4,9 @@
     using System.Collections;
     using System.Collections.Generic;
     using System.Diagnostics.Contracts;
-    using System.Linq;
     using C5;
 
-    public class DoublyLinkedRedBlackBinarySearchTree<T> : ISortedList<T> where T : IComparable<T>
+    public class RedBlackTree<T> : ISortedList<T> where T : IComparable<T>
     {
         #region Fields
 
@@ -15,7 +14,6 @@
         private const bool Black = false;
 
         private Node _root;
-        private readonly Node _sentinel;
 
         #endregion
 
@@ -24,11 +22,8 @@
         [ContractInvariantMethod]
         private void invariants()
         {
-            // First and last point to each other if the collection is empty
-            Contract.Invariant(!IsEmpty || _sentinel.Next == _sentinel && _sentinel.Previous == _sentinel);
-            // First and last are empty but the next and previous pointers respectively
-            Contract.Invariant(_sentinel.Right == null && _sentinel.Left == null && _sentinel.Count == 0);
-
+            // TODO: Very time consuming
+            /*
             // Does this binary tree satisfy symmetric order?
             Contract.Invariant(isBST(_root, null, null));
             // are the size fields correct?
@@ -39,6 +34,7 @@
             Contract.Invariant(isBalanced());
             // check that ranks are consistent
             Contract.Invariant(isRankConsistent());
+            */
         }
 
         // is the tree rooted at root a BST with all keys strictly between min and max
@@ -64,8 +60,7 @@
             return isSizeConsistent(root.Left) && isSizeConsistent(root.Right);
         }
 
-        private bool isRankConsistent()
-        {
+        private bool isRankConsistent() {
             for (var i = 0; i < Count; ++i)
                 if (i != IndexOf(this[i]))
                     return false;
@@ -116,61 +111,21 @@
         {
             public T Key;
             public Node Left, Right;
-            public Node Previous, Next;
             public bool Color;
             public int Count;
 
-            public Node() { }
-
-            public Node(T key, Node previous)
+            public Node(T key)
             {
                 Key = key;
                 Color = Red;
                 Count = 1;
-                insertAfter(previous);
             }
 
             [ContractInvariantMethod]
             private void invariants()
             {
-                Contract.Invariant(Next == null && Previous == null || Count == count(Left) + 1 + count(Right));
-                Contract.Invariant(Next == null && Previous == null || Count == subtree(this).Count());
-            }
-
-            private IEnumerable<Node> subtree(Node root)
-            {
-                if (root.Left != null)
-                    foreach (var node in subtree(root.Left))
-                        yield return node;
-
-                yield return root;
-
-                if (root.Right != null)
-                    foreach (var node in subtree(root.Right))
-                        yield return node;
-            }
-
-            private void insertAfter(Node previous)
-            {
-                Contract.Requires(previous != null);
-                Contract.Requires(previous.Next != null);
-                Contract.Ensures(Contract.OldValue(previous.Next) == previous.Next.Next);
-                Contract.Ensures(previous.Next == this);
-                Contract.Ensures(this.Previous == previous);
-                Contract.Ensures(Contract.OldValue(previous.Next).Previous == this);
-                Contract.Ensures(this.Next == Contract.OldValue(previous.Next));
-
-                var next = previous.Next;
-
-                previous.Next = next.Previous = this;
-                Previous = previous;
-                Next = next;
-            }
-
-            public void RemoveLinks()
-            {
-                Previous.Next = Next;
-                Next.Previous = Previous;
+                Contract.Invariant(Key != null);
+                Contract.Invariant(Count > 0);
             }
         }
 
@@ -200,32 +155,6 @@
             Contract.Ensures(Contract.Result<int>() >= 0);
 
             return node == null ? 0 : node.Count;
-        }
-
-        [Pure]
-        private IEnumerable<T> enumerateFrom(Node node)
-        {
-            Contract.Requires(node != null);
-
-            // Iterate until the _sentinel node
-            while (node != _sentinel)
-            {
-                yield return node.Key;
-                node = node.Next;
-            }
-        }
-
-        [Pure]
-        private IEnumerable<T> enumerateBackwardsFrom(Node node)
-        {
-            Contract.Requires(node != null);
-
-            // Iterate until the _sentinel node
-            while (node != _sentinel)
-            {
-                yield return node.Key;
-                node = node.Previous;
-            }
         }
 
         #endregion
@@ -287,82 +216,75 @@
         /// <summary>
         /// Flip the colors of a node and its two children
         /// </summary>
-        /// <param name="node">The node.</param>
-        private void flipColors(Node node)
+        /// <param name="root">The node.</param>
+        private void flipColors(Node root)
         {
-            Contract.Requires(node != null);
-            Contract.Requires(node.Left != null);
-            Contract.Requires(node.Right != null);
+            Contract.Requires(root != null);
+            Contract.Requires(root.Left != null);
+            Contract.Requires(root.Right != null);
             // Node must have opposite color of its two children
-            Contract.Requires(!isRed(node) && isRed(node.Left) && isRed(node.Right) || (isRed(node) && !isRed(node.Left) && !isRed(node.Right)));
+            Contract.Requires(!isRed(root) && isRed(root.Left) && isRed(root.Right) || (isRed(root) && !isRed(root.Left) && !isRed(root.Right)));
 
-            node.Color = !node.Color;
-            node.Left.Color = !node.Left.Color;
-            node.Right.Color = !node.Right.Color;
+            root.Color = !root.Color;
+            root.Left.Color = !root.Left.Color;
+            root.Right.Color = !root.Right.Color;
         }
 
         // Assuming that root is red and both root.Left and root.Left.Left
         // are black, make root.Left or one of its children red.
-        private Node moveRedLeft(Node node)
+        private Node moveRedLeft(Node root)
         {
-            Contract.Requires(node != null);
-            Contract.Requires(isRed(node) && !isRed(node.Left) && !isRed(node.Left.Left));
+            Contract.Requires(root != null);
+            Contract.Requires(isRed(root) && !isRed(root.Left) && !isRed(root.Left.Left));
 
-            flipColors(node);
-            if (isRed(node.Right.Left))
+            flipColors(root);
+            if (isRed(root.Right.Left))
             {
-                node.Right = rotateRight(node.Right);
-                node = rotateLeft(node);
-                flipColors(node);
+                root.Right = rotateRight(root.Right);
+                root = rotateLeft(root);
+                flipColors(root);
             }
-            return node;
+            return root;
         }
 
         // Assuming that root is red and both root.Right and root.Right.Left
         // are black, make root.Right or one of its children red.
-        private Node moveRedRight(Node node)
+        private Node moveRedRight(Node root)
         {
-            Contract.Requires(node != null);
-            Contract.Requires(isRed(node) && !isRed(node.Right) && !isRed(node.Right.Left));
-            flipColors(node);
-            if (isRed(node.Left.Left))
+            Contract.Requires(root != null);
+            Contract.Requires(isRed(root) && !isRed(root.Right) && !isRed(root.Right.Left));
+            flipColors(root);
+            if (isRed(root.Left.Left))
             {
-                node = rotateRight(node);
-                flipColors(node);
+                root = rotateRight(root);
+                flipColors(root);
             }
-            return node;
+            return root;
         }
 
         /// <summary>
         /// Restores red-black tree invariant for a node.
         /// </summary>
-        /// <param name="node">The node.</param>
+        /// <param name="root">The node.</param>
         /// <returns>The potentially new node.</returns>
-        private Node balance(Node node)
+        private Node balance(Node root)
         {
-            Contract.Requires(node != null);
+            Contract.Requires(root != null);
 
-            if (isRed(node.Right)) node = rotateLeft(node);
-            if (isRed(node.Left) && isRed(node.Left.Left)) node = rotateRight(node);
-            if (isRed(node.Left) && isRed(node.Right)) flipColors(node);
+            if (isRed(root.Right)) root = rotateLeft(root);
+            if (isRed(root.Left) && isRed(root.Left.Left)) root = rotateRight(root);
+            if (isRed(root.Left) && isRed(root.Right)) flipColors(root);
 
-            node.Count = count(node.Left) + count(node.Right) + 1;
-            return node;
+            root.Count = count(root.Left) + count(root.Right) + 1;
+            return root;
         }
 
         #endregion
 
         #region Constructor
 
-        public DoublyLinkedRedBlackBinarySearchTree()
-        {
-            Contract.Ensures(_sentinel != null);
-            Contract.Ensures(_sentinel.Next == _sentinel);
-            Contract.Ensures(_sentinel.Previous == _sentinel);
-
-            _sentinel = new Node();
-            _sentinel.Next = _sentinel.Previous = _sentinel;
-        }
+        public RedBlackTree()
+        { }
 
         #endregion
 
@@ -374,22 +296,15 @@
 
         public bool IsEmpty { get { return _root == null; } }
 
-        public bool AllowsDuplicates
-        {
-            get
-            {
-                // TODO: Allows for duplicates
-                return false;
-            }
-        }
+        public bool AllowsDuplicates { get { return false; } }
 
         public Speed IndexingSpeed { get { return Speed.Log; } }
 
         public T this[int i] { get { return indexer(_root, i).Key; } }
 
-        public T First { get { return _sentinel.Next.Key; } }
+        public T First { get { return min(_root).Key; } }
 
-        public T Last { get { return _sentinel.Previous.Key; } }
+        public T Last { get { return max(_root).Key; } }
 
         #endregion
 
@@ -397,33 +312,27 @@
 
         public IEnumerable<T> EnumerateFromIndex(int index)
         {
-            return enumerateFrom(indexer(_root, index));
+            return enumerateRange(_root, index, Count);
         }
 
         public IEnumerable<T> EnumerateRange(int inclusiveFrom, int exclusiveTo)
         {
-            foreach (var item in EnumerateFromIndex(inclusiveFrom))
-            {
-                if (inclusiveFrom++ < exclusiveTo)
-                    yield return item;
-                else
-                    yield break;
-            }
+            return enumerateRange(_root, inclusiveFrom, exclusiveTo);
         }
 
         public IEnumerable<T> EnumerateBackwards()
         {
-            return enumerateBackwardsFrom(_sentinel.Previous);
+            return enumerateBackwards(_root);
         }
 
         public IEnumerable<T> EnumerateBackwardsFromIndex(int index)
         {
-            return enumerateBackwardsFrom(indexer(_root, index));
+            return enumerateBackwardsFromIndex(_root, index);
         }
 
         public IEnumerator<T> GetEnumerator()
         {
-            return enumerateFrom(_sentinel.Next).GetEnumerator();
+            return enumerate(_root).GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
@@ -444,21 +353,7 @@
 
         public bool Contains(T item)
         {
-            var node = _root;
-
-            while (node != null)
-            {
-                var compareTo = item.CompareTo(node.Key);
-
-                if (compareTo < 0)
-                    node = node.Left;
-                else if (compareTo > 0)
-                    node = node.Right;
-                else
-                    return true;
-            }
-
-            return false;
+            return contains(_root, item);
         }
 
         #endregion
@@ -469,7 +364,7 @@
         {
             var itemWasAdded = false;
 
-            _root = add(item, _root, _sentinel, ref itemWasAdded);
+            _root = add(item, _root, ref itemWasAdded);
             _root.Color = Black;
 
             return itemWasAdded;
@@ -496,12 +391,7 @@
 
         public void Clear()
         {
-            Contract.Ensures(_root == null);
-            Contract.Ensures(_sentinel.Next == _sentinel);
-            Contract.Ensures(_sentinel.Previous == _sentinel);
-
             _root = null;
-            _sentinel.Next = _sentinel.Previous = _sentinel;
         }
 
         #endregion
@@ -539,6 +429,86 @@
             return node;
         }
 
+        private static Node max(Node node)
+        {
+            Contract.Requires(node != null);
+            Contract.Ensures(Contract.Result<Node>().Right == null);
+
+            while (node.Right != null)
+                node = node.Right;
+
+            return node;
+        }
+
+        private IEnumerable<T> enumerate(Node node)
+        {
+            // TODO: Speed up
+
+            if (node == null)
+                yield break;
+            
+            foreach (var item in enumerate(node.Left))
+                yield return item;
+            
+            yield return node.Key;
+            
+            foreach (var item in enumerate(node.Right))
+                yield return item;
+        }
+
+        private IEnumerable<T> enumerateBackwards(Node node)
+        {
+            // TODO: Speed up
+
+            if (node == null)
+                yield break;
+
+            foreach (var item in enumerateBackwards(node.Right))
+                yield return item;
+            
+            yield return node.Key;
+
+            foreach (var item in enumerateBackwards(node.Left))
+                yield return item;
+        }
+
+        private IEnumerable<T> enumerateRange(Node node, int inclusiveFrom, int exclusiveTo)
+        {
+            if (node == null)
+                yield break;
+
+            var index = count(node.Left);
+
+            if (inclusiveFrom < index)
+                foreach (var item in enumerateRange(node.Left, inclusiveFrom, exclusiveTo))
+                    yield return item;
+
+            if (inclusiveFrom <= index && index < exclusiveTo)
+                yield return node.Key;
+
+            if (index + 1 < exclusiveTo)
+                foreach (var item in enumerateRange(node.Right, inclusiveFrom - index - 1, exclusiveTo - index - 1))
+                    yield return item;
+        }
+
+        private IEnumerable<T> enumerateBackwardsFromIndex(Node node, int index)
+        {
+            if (node == null)
+                yield break;
+
+            var currentIndex = count(node.Left);
+
+            if (currentIndex < index)
+                foreach (var item in enumerateBackwardsFromIndex(node.Right, index - currentIndex - 1))
+                    yield return item;
+
+            if (currentIndex <= index)
+                yield return node.Key;
+
+            foreach (var item in enumerateBackwardsFromIndex(node.Left, index))
+                    yield return item;
+        }
+
         private static int indexOf(Node node, T item, out bool itemFound)
         {
             itemFound = false;
@@ -566,35 +536,51 @@
             return index;
         }
 
-        private Node add(T key, Node root, Node previous, ref bool itemWasAdded)
+        private static bool contains(Node node, T item)
         {
-            if (root == null)
+            while (node != null)
+            {
+                var compareTo = item.CompareTo(node.Key);
+
+                if (compareTo < 0)
+                    node = node.Left;
+                else if (compareTo > 0)
+                    node = node.Right;
+                else
+                    return true;
+            }
+            return false;
+        }
+
+        private Node add(T key, Node node, ref bool itemWasAdded)
+        {
+            if (node == null)
             {
                 itemWasAdded = true;
-                return new Node(key, previous);
+                return new Node(key);
             }
 
-            var compareTo = key.CompareTo(root.Key);
+            var compareTo = key.CompareTo(node.Key);
 
             if (compareTo < 0)
-                root.Left = add(key, root.Left, root.Previous, ref itemWasAdded);
+                node.Left = add(key, node.Left, ref itemWasAdded);
             else if (compareTo > 0)
-                root.Right = add(key, root.Right, root, ref itemWasAdded);
+                node.Right = add(key, node.Right, ref itemWasAdded);
             else
-                return root;
+                return node;
 
             // Fix-up any right-leaning links
-            if (isRed(root.Right) && !isRed(root.Left))
-                root = rotateLeft(root);
-            if (isRed(root.Left) && isRed(root.Left.Left))
-                root = rotateRight(root);
-            if (isRed(root.Left) && isRed(root.Right))
-                flipColors(root);
+            if (isRed(node.Right) && !isRed(node.Left))
+                node = rotateLeft(node);
+            if (isRed(node.Left) && isRed(node.Left.Left))
+                node = rotateRight(node);
+            if (isRed(node.Left) && isRed(node.Right))
+                flipColors(node);
 
             if (itemWasAdded)
-                ++root.Count;
+                ++node.Count;
 
-            return root;
+            return node;
         }
 
         private Node remove(Node root, T item, ref bool itemWasRemoved)
@@ -614,7 +600,6 @@
                 if (item.CompareTo(root.Key) == 0 && (root.Right == null))
                 {
                     itemWasRemoved = true;
-                    root.RemoveLinks();
                     return null;
                 }
 
@@ -626,7 +611,7 @@
                     itemWasRemoved = true;
                     var node = min(root.Right);
                     root.Key = node.Key;
-                    root.Right = deleteMin(root.Right);
+                    root.Right = deleteMin(root.Right); 
                 }
                 else
                     root.Right = remove(root.Right, item, ref itemWasRemoved);
@@ -638,10 +623,7 @@
         private Node deleteMin(Node root)
         {
             if (root.Left == null)
-            {
-                root.RemoveLinks();
                 return null;
-            }
 
             if (!isRed(root.Left) && !isRed(root.Left.Left))
                 root = moveRedLeft(root);
