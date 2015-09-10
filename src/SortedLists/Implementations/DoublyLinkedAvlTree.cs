@@ -100,10 +100,7 @@
             #region Fields
 
             public T Key;
-
-            public Node Left, Right;
-            public Node Previous, Next;
-
+            public Node Left, Right, Previous, Next;
             public int Count, Balance;
 
             #endregion
@@ -114,20 +111,6 @@
             private void invariant()
             {
                 Contract.Invariant(Next == null && Previous == null || Count == count(Left) + 1 + count(Right));
-                Contract.Invariant(Next == null && Previous == null || Count == subtree(this).Count());
-            }
-
-            private IEnumerable<Node> subtree(Node root)
-            {
-                if (root.Left != null)
-                    foreach (var node in subtree(root.Left))
-                        yield return node;
-
-                yield return root;
-
-                if (root.Right != null)
-                    foreach (var node in subtree(root.Right))
-                        yield return node;
             }
 
             #endregion
@@ -144,36 +127,20 @@
 
                 Key = key;
                 Count = 1;
-                insertAfter(previous);
+
+                var next = previous.Next;
+                previous.Next = next.Previous = this;
+                Previous = previous;
+                Next = next;
             }
 
-            public Node()
-            { }
+            // Only for _first and _last
+            public Node() { }
 
             #endregion
 
-            private void insertAfter(Node previous)
-            {
-                Contract.Requires(previous != null);
-                Contract.Requires(previous.Next != null);
-                Contract.Ensures(Contract.OldValue(previous.Next) == previous.Next.Next);
-                Contract.Ensures(previous.Next == this);
-                Contract.Ensures(this.Previous == previous);
-                Contract.Ensures(Contract.OldValue(previous.Next).Previous == this);
-                Contract.Ensures(this.Next == Contract.OldValue(previous.Next));
-
-                var next = previous.Next;
-
-                previous.Next = this;
-                Previous = previous;
-
-                Next = next;
-                next.Previous = this;
-            }
-
             public void Remove()
             {
-
                 Previous.Next = Next;
                 Next.Previous = Previous;
             }
@@ -190,11 +157,6 @@
                 var tmp = Key;
                 Key = successor.Key;
                 successor.Key = tmp;
-            }
-
-            public void UpdateCount()
-            {
-                Count = count(Left) + 1 + count(Right);
             }
         }
 
@@ -317,8 +279,8 @@
                             root = rotateRight(root);
 
                             // root.Balance is either -1, 0, or +1
-                            root.Left.Balance = (sbyte) ((root.Balance == +1) ? -1 : 0);
-                            root.Right.Balance = (sbyte) ((root.Balance == -1) ? +1 : 0);
+                            root.Left.Balance = (root.Balance == +1) ? -1 : 0;
+                            root.Right.Balance = (root.Balance == -1) ? +1 : 0;
                             root.Balance = 0;
                             break;
                     }
@@ -347,8 +309,8 @@
                             root = rotateLeft(root);
 
                             // root.Balance is either -1, 0, or +1
-                            root.Left.Balance = (sbyte) (root.Balance == +1 ? -1 : 0);
-                            root.Right.Balance = (sbyte) (root.Balance == -1 ? +1 : 0);
+                            root.Left.Balance = root.Balance == +1 ? -1 : 0;
+                            root.Right.Balance = root.Balance == -1 ? +1 : 0;
                             root.Balance = 0;
                             break;
                     }
@@ -368,8 +330,8 @@
             root.Left = node.Right;
             node.Right = root;
 
-            root.UpdateCount();
-            node.UpdateCount();
+            node.Count = root.Count;
+            root.Count = count(root.Left) + count(root.Right) + 1;
 
             return node;
         }
@@ -384,8 +346,8 @@
             root.Right = node.Left;
             node.Left = root;
 
-            root.UpdateCount();
-            node.UpdateCount();
+            node.Count = root.Count;
+            root.Count = count(root.Left) + count(root.Right) + 1;
 
             return node;
         }
@@ -624,8 +586,7 @@
             {
                 rotationNeeded = true;
                 intervalWasAdded = true;
-                var node = new Node(item, previous);
-                return node;
+                return new Node(item, previous);
             }
 
             var compare = item.CompareTo(root.Key);
@@ -653,11 +614,13 @@
             }
 
             if (intervalWasAdded)
+            {
                 ++root.Count;
 
-            // Tree might be unbalanced after node was added, so we rotate
-            if (rotationNeeded)
-                root = rotateForAdd(root, ref rotationNeeded);
+                // Tree might be unbalanced after node was added, so we rotate
+                if (rotationNeeded)
+                    root = rotateForAdd(root, ref rotationNeeded);
+            }
 
             return root;
         }
@@ -707,10 +670,12 @@
             }
 
             if (intervalWasRemoved)
+            {
                 --root.Count;
 
-            if (rotationNeeded)
-                root = rotateForRemove(root, ref rotationNeeded);
+                if (rotationNeeded)
+                    root = rotateForRemove(root, ref rotationNeeded);
+            }
 
             return root;
         }
