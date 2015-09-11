@@ -142,8 +142,8 @@
       <Link>Properties\SolutionAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="Extensions\EnumerableExtensions.cs" />
-    <Compile Include="ILists\GapBuffer+Enumerator.cs" />
-    <Compile Include="ILists\GapBuffer.cs" />
+    <Compile Include="Lists\GapBuffer+Enumerator.cs" />
+    <Compile Include="Lists\GapBuffer.cs" />
     <Compile Include="Implementations\BTree.cs" />
     <Compile Include="Implementations\AvlTreeSortedSplitList.cs" />
     <Compile Include="Implementations\DoublyLinkedAvlTree.cs" />
