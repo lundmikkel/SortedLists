@@ -154,6 +154,7 @@
     <Compile Include="ImplementationTests\SortedArrayTest.cs" />
     <Compile Include="ImplementationTests\SortedSplitGapBufferTest.cs" />
     <Compile Include="ImplementationTests\RedBlackTreeSortedSplitListTest.cs" />
+    <Compile Include="ImplementationTests\SortedSplitNodeListTest.cs" />
     <Compile Include="ImplementationTests\SortedSplitListTest.cs" />
     <Compile Include="InterfaceTests\SortedListTestBase.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
