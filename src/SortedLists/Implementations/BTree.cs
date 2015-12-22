@@ -174,8 +174,8 @@ namespace SortedLists
                 Contract.Requires(root.IsRoot);
                 Contract.Ensures(Contract.ValueAtReturn<Node>(out leaf) != null);
                 Contract.Ensures(0 <= Contract.ValueAtReturn<int>(out index) && Contract.ValueAtReturn<int>(out index) <= leaf.NodeCount);
-
                 index = Array.BinarySearch(root._keys, 0, root.NodeCount, key);
+                //index = Array.FindIndex(root._keys, 0, root.NodeCount, item => item.CompareTo(key) == 0);
                 while (root._nodes != null)
                 {
                     if (index >= 0)
@@ -583,7 +583,7 @@ namespace SortedLists
         /// </summary>
         /// <param name="allowsDuplicates"></param>
         /// <param name="nodeCapacity"></param>
-        public BTree(bool allowsDuplicates = false, int nodeCapacity = 128)
+        public BTree(bool allowsDuplicates = false, int nodeCapacity = 64)
         {
             Contract.Requires(nodeCapacity > 2);
 

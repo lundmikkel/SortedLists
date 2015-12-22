@@ -20,11 +20,14 @@
                     //typeof (SortedArrayList<>),
                     //typeof (SortedArray<>),
                     //typeof (SortedGapBuffer<>),
-                    //typeof (RedBlackBinarySearchTree<>),
+                    typeof (SortedSet<>),
+                    typeof (RedBlackTree<>),
                     //typeof (DoublyLinkedRedBlackBinarySearchTree<>),
                     typeof (BTree<>),
                     typeof (SortedSplitList<>),
-                    typeof (TreeSortedSplitList<>),
+                    typeof (SortedSplitNodeList<>),
+                    //typeof (RedBlackTreeSortedSplitList<>),
+                    //typeof (AvlTreeSortedSplitList<>),
                     //typeof (SortedSplitGapBuffer<>),
                 };
             }
@@ -152,15 +155,17 @@
 
         private IEnumerable<object[]> GetParameters(Type implementationType)
         {
-            if (implementationType == typeof(SortedSplitList<>))
+            if (implementationType == typeof(SortedSplitList<>) ||
+                implementationType == typeof(RedBlackTreeSortedSplitList<>) ||
+                implementationType == typeof(AvlTreeSortedSplitList<>))
             {
                 return new[]
                 {
-                    //new object[] { 128 },
+                    new object[] { 128 },
                     new object[] { 256 },
                     new object[] { 512 },
                     new object[] { 1024 },
-                    //new object[] { 2048 },
+                    new object[] { 2048 },
                 };
             }
             if (implementationType == typeof(SortedList<>))
