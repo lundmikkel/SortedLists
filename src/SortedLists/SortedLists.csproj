@@ -142,7 +142,12 @@
       <Link>Properties\SolutionAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="Extensions\EnumerableExtensions.cs" />
+    <Compile Include="Implementations\CircularSortedSplitList.cs" />
+    <Compile Include="Implementations\SortedSet.cs" />
     <Compile Include="Implementations\SortedSplitNodeList.cs" />
+    <Compile Include="Lists\CircularArray.cs" />
+    <Compile Include="Lists\CircularList.cs" />
+    <Compile Include="Lists\JavaCircularArrayList.cs" />
     <Compile Include="Lists\GapBuffer+Enumerator.cs" />
     <Compile Include="Lists\GapBuffer.cs" />
     <Compile Include="Implementations\BTree.cs" />
