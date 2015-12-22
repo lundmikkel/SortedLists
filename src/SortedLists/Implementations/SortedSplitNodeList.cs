@@ -65,12 +65,19 @@
             public readonly List<T> List;
             public int Offset;
 
-            public Node(T item, int offset = -1) : this(offset)
+            [ContractInvariantMethod]
+            private void invariants()
+            {
+                Contract.Invariant(List != null);
+                Contract.Invariant(List.IsSorted());
+            }
+
+            public Node(T item, int offset = 0) : this(offset)
             {
                 List.Add(item);
             }
 
-            public Node(int offset = -1)
+            public Node(int offset = 0)
             {
                 List = new List<T>();
                 Offset = offset;
@@ -91,7 +98,7 @@
             _deepness = (int) Math.Pow(2, Math.Ceiling(Math.Log(deepness, 2)));
 
             _deepness = deepness;
-            _nodes = new List<Node> { new Node(0) };
+            _nodes = new List<Node> { new Node() };
             _dirtyFrom = 1;
         }
 
@@ -119,8 +126,8 @@
             get
             {
                 var listIndex = GetListIndex(index);
-                var itemIndex = index - _nodes[listIndex].Offset;
-                return _nodes[listIndex].List[itemIndex];
+                var node = _nodes[listIndex];
+                return node.List[index - node.Offset];
             }
         }
 
@@ -145,21 +152,18 @@
         public int IndexOf(T item)
         {
             var listIndex = GetListIndex(item);
-            var list = _nodes[listIndex].List;
-            var itemIndex = GetItemIndex(list, item);
+            var node = _nodes[listIndex];
+            var itemIndex = GetItemIndex(node.List, item);
 
             UpdateOffsetsBefore(listIndex + 1);
-            return itemIndex >= 0 ? _nodes[listIndex].Offset + itemIndex : ~(_nodes[listIndex].Offset + ~itemIndex);
+            return itemIndex >= 0 ? node.Offset + itemIndex : ~(node.Offset + ~itemIndex);
         }
 
         /// <inheritdoc/>
         public bool Contains(T item)
         {
             // Don't use IndexOf to avoid updating offsets unnecessarily!
-            var listIndex = GetListIndex(item);
-            var list = _nodes[listIndex].List;
-            var itemIndex = GetItemIndex(list, item);
-            return itemIndex >= 0;
+            return GetItemIndex(_nodes[GetListIndex(item)].List, item) >= 0;
         }
 
         #endregion
@@ -265,7 +269,11 @@
             }
             else if (itemIndex == list.Count && listIndex == _nodes.Count - 1)
             {
-                // The item is added to a new list put a the end
+                // Increment dirty index if the lists isn't dirty...
+                if (_dirtyFrom == _nodes.Count)
+                    ++_dirtyFrom;
+
+                // ... since we set the new offset at node creation
                 _nodes.Add(new Node(item, _count));
             }
             // TODO: This does very little in practice!
@@ -350,7 +358,7 @@
         public void Clear()
         {
             _nodes.Clear();
-            _nodes.Add(new Node(0));
+            _nodes.Add(new Node());
 
             _count = 0;
             _dirtyFrom = 1;
